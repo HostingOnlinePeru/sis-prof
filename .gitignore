@@ -1,0 +1,43 @@
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+
+# Dependencies
+**/vendor/
+**/node_modules/
+
+# Logs and cache
+*.log
+**/*.log
+.phpunit.result.cache
+**/.phpunit.result.cache
+.phpunit.cache/
+**/.phpunit.cache/
+
+# Laravel storage / public build
+**/public/build
+**/public/hot
+**/public/storage
+**/storage/*.key
+**/storage/pail
+
+# IDEs & Editors
+.idea/
+.vscode/
+.cursor/
+.codex/
+.nova/
+.zed/
+_ide_helper.php
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
