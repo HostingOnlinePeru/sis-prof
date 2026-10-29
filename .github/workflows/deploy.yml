@@ -16,14 +16,53 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
-            /home/deploy/deploy-sisprof.sh
-            ARTISAN_PATH=$(find /home /var/www -name artisan 2>/dev/null | head -n 1)
-            if [ -n "$ARTISAN_PATH" ]; then
-              APP_DIR=$(dirname "$ARTISAN_PATH")
-              echo "Directorio de la aplicacion: $APP_DIR"
-              cd "$APP_DIR"
-              php artisan optimize:clear
-              php artisan view:clear
-              rm -f storage/framework/views/*.php
+            echo "=== INICIANDO DEPLOY ==="
+            cat /home/deploy/deploy-sisprof.sh || true
+            /home/deploy/deploy-sisprof.sh || true
+            
+            # Buscar el directorio del proyecto
+            TARGET_DIR=""
+            for dir in /var/www/sisprof /var/www/html /home/deploy/sisprof /home/deploy/sis.estructurasycoberturas.com /var/www/sis.estructurasycoberturas.com; do
+              if [ -d "$dir" ]; then
+                TARGET_DIR="$dir"
+                break
+              fi
+            done
+            
+            if [ -z "$TARGET_DIR" ]; then
+              TARGET_DIR=$(find /var/www /home/deploy -name artisan -exec dirname {} \; 2>/dev/null | head -n 1)
             fi
+            
+            echo "Target dir: $TARGET_DIR"
+            
+            if [ -n "$TARGET_DIR" ]; then
+              # Si estamos dentro de un subdirectorio o la raiz del repo
+              REPO_DIR="$TARGET_DIR"
+              if [ ! -d "$REPO_DIR/.git" ] && [ -d "$REPO_DIR/../.git" ]; then
+                REPO_DIR="$REPO_DIR/.."
+              fi
+              
+              echo "Repo dir: $REPO_DIR"
+              cd "$REPO_DIR" || true
+              git fetch origin main || true
+              git reset --hard origin/main || true
+              
+              cd "$TARGET_DIR" || true
+              php artisan optimize:clear || true
+              php artisan view:clear || true
+              rm -f storage/framework/views/*.php || true
+              
+              # Guardar log de diagnostico en public
+              if [ -d "public" ]; then
+                {
+                  echo "=== DIAGNOSTICO DEPLOY ==="
+                  echo "Fecha: $(date)"
+                  echo "Directorio: $(pwd)"
+                  echo "Git Commit: $(git log -n 1 --oneline 2>/dev/null)"
+                  echo "Deploy script:"
+                  cat /home/deploy/deploy-sisprof.sh 2>/dev/null
+                } > public/deploy-info.txt
+              fi
+            fi
+            
             sudo systemctl reload php*-fpm 2>/dev/null || sudo service php*-fpm reload 2>/dev/null || true
