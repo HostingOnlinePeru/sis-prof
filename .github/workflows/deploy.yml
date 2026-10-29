@@ -15,4 +15,15 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          script: /home/deploy/deploy-sisprof.sh
+          script: |
+            /home/deploy/deploy-sisprof.sh
+            ARTISAN_PATH=$(find /home /var/www -name artisan 2>/dev/null | head -n 1)
+            if [ -n "$ARTISAN_PATH" ]; then
+              APP_DIR=$(dirname "$ARTISAN_PATH")
+              echo "Directorio de la aplicacion: $APP_DIR"
+              cd "$APP_DIR"
+              php artisan optimize:clear
+              php artisan view:clear
+              rm -f storage/framework/views/*.php
+            fi
+            sudo systemctl reload php*-fpm 2>/dev/null || sudo service php*-fpm reload 2>/dev/null || true
