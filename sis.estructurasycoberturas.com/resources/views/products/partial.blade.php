@@ -44,16 +44,44 @@
         </div>
 
         <div class="panel" style="margin-top: 18px;">
-            <h3>Categorías</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin: 0;">Categorías</h3>
+                @if ($currentCategory)
+                    <a href="{{ route('products.index') }}" data-ajax-link data-nav="products" style="font-size: 12px; color: #fbbf24; font-weight: 700;">Ver todas</a>
+                @endif
+            </div>
             <div class="folders">
                 @forelse ($categories as $category)
-                    <a class="folder {{ $currentCategory?->id === $category->id ? 'active' : '' }}" href="{{ route('products.index', ['category' => $category->id]) }}" data-ajax-link data-nav="products">
-                        <div>
-                            <strong>{{ $category->name }}</strong>
-                            <span>{{ $category->description ?: 'Sin descripción' }}</span>
+                    <div class="folder {{ $currentCategory?->id === $category->id ? 'active' : '' }}" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <a href="{{ route('products.index', ['category' => $category->id]) }}" data-ajax-link data-nav="products" style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: inherit; text-decoration: none;">
+                            <div style="min-width: 0;">
+                                <strong style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $category->name }}</strong>
+                                <span style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $category->description ?: 'Sin descripción' }}</span>
+                            </div>
+                            <span class="badge" style="flex-shrink: 0;">{{ $category->products_count }}</span>
+                        </a>
+                        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                            <button type="button" class="button secondary" onclick="editCategoryModal({{ $category->toJson() }})" title="Editar categoría" aria-label="Editar categoría" style="padding: 0; width: 32px; height: 32px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; cursor: pointer;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 15px; height: 15px; color: #60a5fa;">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                    <path d="m15 5 4 4"/>
+                                </svg>
+                            </button>
+                            <form method="post" action="{{ route('products.categories.destroy', $category) }}" data-ajax-form onsubmit="return confirm('¿Estás seguro de eliminar la categoría &quot;{{ addslashes($category->name) }}&quot;? Los productos quedarán sin categoría.')" style="margin: 0;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="button secondary" title="Eliminar categoría" aria-label="Eliminar categoría" style="padding: 0; width: 32px; height: 32px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; color: #ef4444; border-color: rgba(239, 68, 68, 0.3); cursor: pointer;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 15px; height: 15px;">
+                                        <path d="M3 6h18"/>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                        <line x1="10" x2="10" y1="11" y2="17"/>
+                                        <line x1="14" x2="14" y1="11" y2="17"/>
+                                    </svg>
+                                </button>
+                            </form>
                         </div>
-                        <span>{{ $category->products_count }}</span>
-                    </a>
+                    </div>
                 @empty
                     <div class="empty">Todavía no hay categorías creadas.</div>
                 @endforelse
@@ -107,7 +135,7 @@
                                         <span style="display: inline-flex; align-items: center; gap: 4px;"><strong style="color: #cbd5e1;">SKU:</strong> {{ $product->sku }}</span>
                                     @endif
                                     <span style="display: inline-flex; align-items: center; gap: 4px;"><strong style="color: #cbd5e1;">Unidad:</strong> {{ $product->unit }}</span>
-                                    <span style="display: inline-flex; align-items: center; gap: 4px; color: #fbbf24; font-weight: 600;"><strong style="color: #cbd5e1;">Precio:</strong> S/ {{ number_format((float) $product->price, 2) }}</span>
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; color: #fbbf24; font-weight: 600;"><strong style="color: #cbd5e1;">Precio:</strong> {{ \App\Support\LatamCurrencies::symbol(app(\App\Support\CompanyContext::class)->active()?->default_currency) }} {{ number_format((float) $product->price, 2) }}</span>
                                 </div>
                                 <div style="margin-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 6px;">
                                     <button type="button" onclick="toggleAccordion('desc-{{ $product->id }}', this)" style="background: transparent; border: none; padding: 4px 0; color: #60a5fa; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; outline: none;">
@@ -224,6 +252,32 @@
     </div>
 </div>
 
+<div id="categoryModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);">
+    <div class="panel modal-content" style="width: 100%; max-width: 480px; background: #111820; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); position: relative; padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 14px;">
+            <h3 id="categoryModalTitle" style="margin: 0; font-size: 18px; color: #fff;">Editar categoría</h3>
+            <button type="button" onclick="closeCategoryModal()" style="background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 24px; line-height: 1; padding: 4px;">&times;</button>
+        </div>
+
+        <form id="categoryEditForm" class="form-grid" method="post" action="" data-ajax-form>
+            @csrf
+            @method('PUT')
+            <div>
+                <label for="edit_category_name">Nombre de categoría</label>
+                <input id="edit_category_name" name="name" required placeholder="Ej. Toldos, estructuras, accesorios">
+            </div>
+            <div>
+                <label for="edit_category_description">Descripción</label>
+                <textarea id="edit_category_description" name="description" placeholder="Uso interno de esta categoría"></textarea>
+            </div>
+            <div class="actions" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="button secondary" type="button" onclick="closeCategoryModal()">Cancelar</button>
+                <button class="button" type="submit">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 window.openProductModal = function openProductModal() {
     const modalTitle = document.getElementById('modalTitle');
@@ -314,6 +368,34 @@ window.closeProductModal = function closeProductModal() {
     }
 };
 
+window.editCategoryModal = function editCategoryModal(category) {
+    const form = document.getElementById('categoryEditForm');
+    const nameInput = document.getElementById('edit_category_name');
+    const descInput = document.getElementById('edit_category_description');
+    const title = document.getElementById('categoryModalTitle');
+
+    if (form) form.action = '/admin/productos/categorias/' + category.id;
+    if (nameInput) nameInput.value = category.name || '';
+    if (descInput) descInput.value = category.description || '';
+    if (title) title.textContent = 'Editar categoría: ' + (category.name || '');
+
+    const modal = document.getElementById('categoryModal');
+    if (modal) {
+        modal.classList.add('is-open');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeCategoryModal = function closeCategoryModal() {
+    const modal = document.getElementById('categoryModal');
+    if (modal) {
+        modal.classList.remove('is-open');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+};
+
 window.toggleAccordion = function toggleAccordion(id, btn) {
     const el = document.getElementById(id);
     const arrow = btn?.querySelector('.acc-arrow');
@@ -335,6 +417,10 @@ document.addEventListener('click', function(e) {
     const modal = document.getElementById('productModal');
     if (e.target === modal) {
         closeProductModal();
+    }
+    const catModal = document.getElementById('categoryModal');
+    if (e.target === catModal) {
+        closeCategoryModal();
     }
 });
 

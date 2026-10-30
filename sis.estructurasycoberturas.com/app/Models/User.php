@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_active', 'membership_tier', 'membership_ends_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -30,12 +30,107 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'membership_ends_at' => 'datetime',
         ];
+    }
+
+    public const TRIAL_DAYS = 7;
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if ($user->role !== 'super_admin') {
+                if (empty($user->membership_tier)) {
+                    $user->membership_tier = 'basic';
+                }
+                if (empty($user->membership_ends_at)) {
+                    $user->membership_ends_at = now()->addDays(self::TRIAL_DAYS);
+                }
+            }
+        });
     }
 
     public function companies()
     {
         return $this->hasMany(CompanySetting::class, 'user_id');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function hasActiveMembership(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->membership_ends_at !== null && $this->membership_ends_at->isFuture();
+    }
+
+    public function membershipDaysLeft(): int
+    {
+        if (! $this->membership_ends_at || $this->membership_ends_at->isPast()) {
+            return 0;
+        }
+
+        return (int) ceil(now()->diffInSeconds($this->membership_ends_at) / 86400);
+    }
+
+    public function isOnTrial(): bool
+    {
+        return ! $this->isSuperAdmin()
+            && ! $this->subscriptions()->whereIn('status', ['paid', 'granted'])->exists();
+    }
+
+    public function isPremium(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->membership_tier === 'premium';
+    }
+
+    public function currentTierLabel(): string
+    {
+        return $this->isPremium() ? 'Premium' : 'Básico';
+    }
+
+    public function maxCompanies(): int
+    {
+        return $this->isPremium() ? 2 : 1;
+    }
+
+    public function canCreateCompany(): bool
+    {
+        return $this->companies()->count() < $this->maxCompanies();
+    }
+
+    public function canUseMultiCurrency(): bool
+    {
+        return $this->isPremium();
+    }
+
+    public function canUsePhotoGallery(): bool
+    {
+        return $this->isPremium();
+    }
+
+    public function currentPlanName(): ?string
+    {
+        $last = $this->subscriptions()
+            ->whereIn('status', ['paid', 'granted'])
+            ->with('plan')
+            ->latest('ends_at')
+            ->first();
+
+        if ($last?->plan) {
+            return $last->plan->tierLabel().' · '.$last->plan->name;
+        }
+
+        return $this->currentTierLabel();
     }
 
     public function isSuperAdmin(): bool

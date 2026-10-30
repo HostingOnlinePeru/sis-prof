@@ -13,7 +13,7 @@
 
     <p style="margin-top: 18px;">
         <strong>Proforma:</strong> {{ $proforma->number }}<br>
-        <strong>Total:</strong> {{ $proforma->currency }} {{ number_format((float) $proforma->total, 2) }}
+        <strong>Total:</strong> {{ \App\Support\LatamCurrencies::symbol($proforma->currency) }} {{ number_format((float) $proforma->total, 2) }}
     </p>
 
     <p style="margin-top: 18px;">

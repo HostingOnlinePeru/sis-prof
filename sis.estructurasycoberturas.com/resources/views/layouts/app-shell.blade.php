@@ -430,10 +430,7 @@
         .preview { width: 112px; height: 76px; display: grid; place-items: center; border: 1px dashed rgba(255, 255, 255, .22); border-radius: 8px; background: transparent; color: var(--muted); font-size: 12px; text-align: center; overflow: hidden; }
         .preview img { width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; padding: 0; background: transparent; }
 
-        .folders, .files, .products-list, .sp-quick {
-            display: grid;
-            gap: 10px;
-        }
+        .folders, .files, .products-list {display: grid; gap: 10px;}
 
         .folders { margin-top: 14px; }
 
@@ -449,7 +446,7 @@
             background: rgba(245, 158, 11, .09);
         }
 
-        .folder strong, .sp-quick span { display: block; }
+        .folder strong {display: block;}
 
         .folder span, .muted {
             color: var(--muted);
@@ -759,24 +756,34 @@
             font-weight: 800;
         }
 
-        .sp-quick a {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 13px 14px;
-            background: rgba(255, 255, 255, .035);
-            color: #e8eef5;
-            transition: border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
-        }
-
-        .sp-quick a:hover {
-            border-color: rgba(245, 158, 11, .55);
-            background: rgba(245, 158, 11, .08);
-            box-shadow: 0 14px 28px rgba(0, 0, 0, .22);
-            transform: translateX(4px);
-        }
+        .sp-quick {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;}
+        .sp-quick a.sp-quick-card {position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; border: 1px solid rgba(255, 255, 255, .09); border-radius: 12px; padding: 16px; background: linear-gradient(165deg, rgba(255, 255, 255, .055) 0%, rgba(15, 23, 34, .75) 100%); color: #f1f5f9; overflow: hidden; box-shadow: 0 10px 26px rgba(0, 0, 0, .22); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;}
+        .sp-quick a.sp-quick-card:hover {border-color: rgba(245, 158, 11, .55); background: linear-gradient(165deg, rgba(245, 158, 11, .11) 0%, rgba(19, 30, 44, .92) 100%); box-shadow: 0 18px 36px rgba(0, 0, 0, .38), 0 0 0 1px rgba(245, 158, 11, .20); transform: translateY(-3px);}
+        .sp-quick a.sp-quick-card.is-primary {grid-column: 1 / -1; flex-direction: row; align-items: center; background: linear-gradient(135deg, rgba(245, 158, 11, .22) 0%, rgba(20, 61, 97, .55) 60%, rgba(17, 24, 32, .95) 100%); border-color: rgba(245, 158, 11, .42);}
+        .sp-quick a.sp-quick-card.is-primary:hover {border-color: #fbbf24; box-shadow: 0 18px 38px rgba(245, 158, 11, .22);}
+        .sp-quick-top {display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 10px;}
+        .sp-quick-main {display: flex; align-items: center; gap: 14px; min-width: 0;}
+        .sp-quick-icon {width: 44px; height: 44px; border-radius: 11px; display: inline-grid; place-items: center; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, .14); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 8px 18px rgba(0, 0, 0, .24); transition: transform .2s ease;}
+        .sp-quick a.sp-quick-card:hover .sp-quick-icon {transform: scale(1.06);}
+        .sp-quick-icon svg {width: 22px; height: 22px; stroke-width: 2; stroke: currentColor; fill: none;}
+        .sp-quick-icon.amber {background: linear-gradient(135deg, rgba(245, 158, 11, .28), rgba(217, 119, 6, .12)); color: #fbbf24; border-color: rgba(245, 158, 11, .45);}
+        .sp-quick-icon.blue {background: linear-gradient(135deg, rgba(59, 130, 246, .28), rgba(37, 99, 235, .12)); color: #60a5fa; border-color: rgba(59, 130, 246, .42);}
+        .sp-quick-icon.emerald {background: linear-gradient(135deg, rgba(16, 185, 129, .28), rgba(5, 150, 105, .12)); color: #34d399; border-color: rgba(16, 185, 129, .42);}
+        .sp-quick-icon.purple {background: linear-gradient(135deg, rgba(168, 85, 247, .28), rgba(126, 34, 206, .12)); color: #c084fc; border-color: rgba(168, 85, 247, .42);}
+        .sp-quick-icon.cyan {background: linear-gradient(135deg, rgba(6, 182, 212, .28), rgba(8, 145, 178, .12)); color: #22d3ee; border-color: rgba(6, 182, 212, .42);}
+        .sp-quick-icon.rose {background: linear-gradient(135deg, rgba(244, 63, 94, .26), rgba(225, 29, 72, .12)); color: #fb7185; border-color: rgba(244, 63, 94, .40);}
+        .sp-quick-text {display: grid; gap: 3px; min-width: 0;}
+        .sp-quick-title {font-size: 14.5px; font-weight: 800; color: #f8fafc; line-height: 1.25;}
+        .sp-quick-sub {font-size: 12px; color: #94a3b8; line-height: 1.35;}
+        .sp-quick-arrow {width: 30px; height: 30px; border-radius: 8px; display: inline-grid; place-items: center; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .10); color: #cbd5e1; flex-shrink: 0; transition: background .2s ease, color .2s ease, transform .2s ease, border-color .2s ease;}
+        .sp-quick a.sp-quick-card:hover .sp-quick-arrow {background: var(--amber); border-color: #fbbf24; color: #160d02; transform: translateX(2px);}
+        .sp-quick-arrow svg {width: 15px; height: 15px; stroke-width: 2.4; stroke: currentColor; fill: none;}
+        .sp-quick-badge {display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; background: rgba(245, 158, 11, .16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, .34);}
+        .sp-kpi-top {display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;}
+        .sp-kpi-top .sp-label {margin: 0;}
+        .sp-kpi-icon {width: 36px; height: 36px; border-radius: 9px; display: inline-grid; place-items: center; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .10); color: #fbbf24;}
+        .sp-kpi-icon svg {width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none;}
+        @media (max-width: 640px) { .sp-quick {grid-template-columns: 1fr;} }
 
         .modal-backdrop {
             position: fixed;
@@ -958,6 +965,10 @@
                 padding: 0;
             }
         }
+        .membership-pill {display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; background: rgba(245, 158, 11, .14); border: 1px solid rgba(245, 158, 11, .45); color: #fcd34d; font-size: 12px; font-weight: 800; white-space: nowrap; animation: membershipPulse 2.4s ease-in-out infinite;}
+        .membership-pill.is-expired {background: rgba(239, 68, 68, .14); border-color: rgba(239, 68, 68, .45); color: #fca5a5;}
+        @keyframes membershipPulse {0%, 100% {box-shadow: 0 0 0 0 rgba(245, 158, 11, .0);} 50% {box-shadow: 0 0 0 6px rgba(245, 158, 11, .12);}}
+        @media (max-width: 760px) {.membership-pill {display: none;}}
     </style>
 </head>
 <body>
@@ -976,19 +987,19 @@
                 <p>Panel de Administración SaaS</p>
             @else
                 <h1>{{ $company?->business_name ?: 'Sistema de Proformas' }}</h1>
+                @if (auth()->user()?->isPremium() && isset($companies) && $companies->count() > 1)
+                    <form class="company-switcher" method="post" action="{{ route('company.switch') }}">
+                        @csrf
+                        <label for="sidebar-company-select">Cambiar empresa ({{ $companies->count() }}/2)</label>
+                        <select id="sidebar-company-select" name="company_id" onchange="this.form.submit()">
+                            @foreach ($companies as $compItem)
+                                <option value="{{ $compItem->id }}" @selected($company?->id === $compItem->id)>{{ $compItem->business_name }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
             @endif
 
-            @if ($companies->isNotEmpty())
-                <form class="company-switcher" method="post" action="{{ route('company.switch') }}">
-                    @csrf
-                    <label for="active_company_id">Empresa activa</label>
-                    <select id="active_company_id" name="company_id" onchange="this.form.submit()">
-                        @foreach ($companies as $availableCompany)
-                            <option value="{{ $availableCompany->id }}" @selected($availableCompany->id === $company?->id)>{{ $availableCompany->business_name }}</option>
-                        @endforeach
-                    </select>
-                </form>
-            @endif
         </div>
 
         <nav class="app-nav" aria-label="Menú principal">
@@ -1003,6 +1014,15 @@
                         </svg>
                     </span>
                     <span style="color: #93c5fd; font-weight: 700;">Gestión de Usuarios</span>
+                </a>
+                <a class="{{ $activePage === 'saas_memberships' ? 'active' : '' }}" href="{{ route('superadmin.subscriptions.index') }}" data-ajax-link data-nav="saas_memberships">
+                    <span class="app-icon" style="background: rgba(37, 99, 235, 0.25); color: #60a5fa;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <rect x="2" y="5" width="20" height="14" rx="2"/>
+                            <path d="M2 10h20M6 15h4"/>
+                        </svg>
+                    </span>
+                    <span style="color: #93c5fd; font-weight: 700;">Membresías</span>
                 </a>
             @else
                 <a class="{{ $activePage === 'dashboard' ? 'active' : '' }}" href="{{ route('dashboard.local') }}" data-ajax-link data-nav="dashboard">
@@ -1046,15 +1066,17 @@
                     </span>
                     <span>Productos</span>
                 </a>
-                <a class="{{ $activePage === 'documents' ? 'active' : '' }}" href="{{ route('documents.index') }}" data-ajax-link data-nav="documents">
-                    <span class="app-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                            <path d="M3 7h7l2 2h9v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z"/>
-                            <path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h4a2 2 0 0 1 2 2"/>
-                        </svg>
-                    </span>
-                    <span>Galería de fotos</span>
-                </a>
+                @if (auth()->user()?->canUsePhotoGallery())
+                    <a class="{{ $activePage === 'documents' ? 'active' : '' }}" href="{{ route('documents.index') }}" data-ajax-link data-nav="documents">
+                        <span class="app-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path d="M3 7h7l2 2h9v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z"/>
+                                <path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h4a2 2 0 0 1 2 2"/>
+                            </svg>
+                        </span>
+                        <span>Galería de fotos</span>
+                    </a>
+                @endif
                 <a class="{{ $activePage === 'terms' ? 'active' : '' }}" href="{{ route('terms.index') }}" data-ajax-link data-nav="terms">
                     <span class="app-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -1073,6 +1095,14 @@
                         </svg>
                     </span>
                     <span>Empresa</span>
+                </a>
+                <a class="{{ $activePage === 'membership' ? 'active' : '' }}" href="{{ route('membership.index') }}" data-ajax-link data-nav="membership">
+                    <span class="app-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z"/>
+                        </svg>
+                    </span>
+                    <span>Membresía</span>
                 </a>
             @endif
             <form method="post" action="/admin/logout">
@@ -1104,9 +1134,15 @@
                 <h2 id="app-page-title">{{ $pageTitle }}</h2>
                 <p id="app-page-subtitle">{{ $pageSubtitle }}</p>
             </div>
+            @php $shellUser = auth()->user(); @endphp
+            @if ($shellUser && ! $shellUser->isSuperAdmin() && $shellUser->membershipDaysLeft() <= 7)
+                <a class="membership-pill {{ $shellUser->hasActiveMembership() ? '' : 'is-expired' }}" href="{{ route('membership.index') }}" data-ajax-link data-nav="membership" id="membership-pill">
+                    {{ $shellUser->hasActiveMembership() ? 'Tu membresía vence en '.$shellUser->membershipDaysLeft().' día(s) · Renovar' : 'Membresía vencida · Renovar' }}
+                </a>
+            @endif
         </div>
         <div id="app-top-action">
-            @if ($activePage !== 'dashboard')
+            @if ($activePage !== 'dashboard' && ! auth()->user()?->isSuperAdmin())
                 <a class="button secondary" href="{{ route('dashboard.local') }}" data-ajax-link data-nav="dashboard" aria-label="Ir al escritorio">
                     <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16h-11A2.5 2.5 0 0 1 4 13.5v-8Z" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -1131,6 +1167,7 @@
         const sidebarBackdrop = document.getElementById('sidebar-backdrop');
         const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
         const desktopUrl = @json(route('dashboard.local'));
+        const isSuperAdmin = @json((bool) auth()->user()?->isSuperAdmin());
 
         function setMobileMenu(open) {
             const isOpen = Boolean(open);
@@ -1175,7 +1212,7 @@
                 item.classList.toggle('active', item.dataset.nav === activePage);
             });
 
-            topAction.innerHTML = activePage === 'dashboard' ? '' : desktopButton();
+            topAction.innerHTML = (activePage === 'dashboard' || isSuperAdmin) ? '' : desktopButton();
         }
 
         function documentFileView() {
@@ -1289,6 +1326,7 @@
         }
 
         function applyPayload(payload) {
+            document.body.style.overflow = '';
             content.innerHTML = payload.html;
             executeInjectedScripts(content);
             pageTitle.textContent = payload.title;
@@ -1332,6 +1370,12 @@
 
                 if (input) {
                     input.value = editor.innerHTML.trim();
+                    if (editor.dataset.target === '#proforma_terms_input') {
+                        const preview = document.getElementById('proforma_terms_preview');
+                        if (preview) {
+                            preview.innerHTML = input.value || '<span class="muted">Sin términos personalizados. Se usarán los términos predeterminados al guardar.</span>';
+                        }
+                    }
                 }
             });
         }
@@ -1384,7 +1428,7 @@
             applyPayload(payload);
 
             if (push) {
-                history.pushState({}, '', url);
+                history.pushState({}, '', response.redirected ? response.url : url);
             }
         }
 

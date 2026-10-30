@@ -257,7 +257,8 @@
             $logoDataUri = 'data:'.$logoMime.';base64,'.base64_encode(file_get_contents($fullLogoPath));
         }
     }
-    $currency = $proforma->currency === 'USD' ? '$' : 'S/';
+    $currency = \App\Support\LatamCurrencies::symbol($proforma->currency);
+    $currencyLabel = \App\Support\LatamCurrencies::shortOptionLabel($proforma->currency ?: 'PEN');
     $clientCompany = $proforma->client->company_name ?: $proforma->client->name;
     $companyName = $company?->commercial_name ?: $company?->business_name ?: 'Sistema de Proformas';
 @endphp

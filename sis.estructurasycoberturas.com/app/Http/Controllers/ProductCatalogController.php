@@ -72,6 +72,42 @@ class ProductCatalogController extends Controller
             ->with('status', 'Categoría creada correctamente.');
     }
 
+    public function updateCategory(Request $request, ProductCategory $category): RedirectResponse|JsonResponse|View
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'description' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $category->update($data);
+        session()->flash('status', 'Categoría actualizada correctamente.');
+
+        if ($request->header('X-App-Partial') === '1' || $request->expectsJson()) {
+            return $this->index($request->merge(['category' => $category->id]));
+        }
+
+        return redirect()
+            ->route('products.index', ['category' => $category->id])
+            ->with('status', 'Categoría actualizada correctamente.');
+    }
+
+    public function destroyCategory(Request $request, ProductCategory $category): RedirectResponse|JsonResponse|View
+    {
+        Product::query()->where('product_category_id', $category->id)->update(['product_category_id' => null]);
+        $category->delete();
+        session()->flash('status', 'Categoría eliminada correctamente.');
+
+        $nextCategoryId = $request->integer('category') === $category->id ? null : $request->integer('category');
+
+        if ($request->header('X-App-Partial') === '1' || $request->expectsJson()) {
+            return $this->index($request->merge(['category' => $nextCategoryId ?: null]));
+        }
+
+        return redirect()
+            ->route('products.index', array_filter(['category' => $nextCategoryId]))
+            ->with('status', 'Categoría eliminada correctamente.');
+    }
+
     public function storeProduct(Request $request): RedirectResponse|JsonResponse|View
     {
         $data = $this->validateProduct($request);

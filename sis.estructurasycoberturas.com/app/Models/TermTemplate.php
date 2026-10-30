@@ -11,6 +11,7 @@ class TermTemplate extends Model
 
     protected $fillable = [
         'name',
+        'title',
         'content',
         'active',
     ];

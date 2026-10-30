@@ -103,6 +103,8 @@ class TermTemplateController extends Controller
             'ul',
         ]);
 
+        $data['title'] = $data['name'];
+
         return $data;
     }
 }

@@ -1,5 +1,13 @@
 @php
-    $termsContent = html_entity_decode(old('terms', $proforma->terms) ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $activeCompany = app(\App\Support\CompanyContext::class)->active();
+    $defaultConfiguredTerms = \App\Models\TermTemplate::query()->where('active', true)->latest()->value('content')
+        ?: \App\Models\TermTemplate::query()->latest()->value('content')
+        ?: '';
+    $rawProformaTerms = old('terms', $proforma->terms);
+    if ($rawProformaTerms === null || trim(strip_tags((string) $rawProformaTerms)) === '') {
+        $rawProformaTerms = $defaultConfiguredTerms;
+    }
+    $termsContent = html_entity_decode((string) $rawProformaTerms, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $items = old('items');
 
     if (! $items) {
@@ -114,13 +122,36 @@
                 <input id="valid_until" name="valid_until" type="date" value="{{ old('valid_until', $proforma->valid_until?->format('Y-m-d')) }}">
             </div>
 
-            <div class="field">
-                <label for="currency">Moneda</label>
-                <select id="currency" name="currency" required>
-                    <option value="PEN" @selected(old('currency', $proforma->currency) === 'PEN')>Soles</option>
-                    <option value="USD" @selected(old('currency', $proforma->currency) === 'USD')>Dólares</option>
-                </select>
-            </div>
+            @php
+                $activeCompany = app(\App\Support\CompanyContext::class)->active();
+                $enabledCurrencies = \App\Support\LatamCurrencies::enabledForCompany($activeCompany, (bool) auth()->user()?->canUseMultiCurrency());
+                $selectedProformaCurrency = old('currency', $proforma->currency ?: ($activeCompany?->default_currency ?: 'PEN'));
+                if (! isset($enabledCurrencies[$selectedProformaCurrency]) && $proforma->exists && $proforma->currency) {
+                    $enabledCurrencies[$proforma->currency] = \App\Support\LatamCurrencies::get($proforma->currency);
+                }
+            @endphp
+
+            @if (count($enabledCurrencies) > 1)
+                <div class="field">
+                    <label for="currency">Moneda</label>
+                    <select id="currency" name="currency" required>
+                        @foreach ($enabledCurrencies as $code => $cItem)
+                            <option value="{{ $code }}" @selected($selectedProformaCurrency === $code)>
+                                {{ $cItem['symbol'] }} — {{ $cItem['name'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @else
+                @php
+                    $onlyCurrency = reset($enabledCurrencies) ?: \App\Support\LatamCurrencies::get('PEN');
+                @endphp
+                <div class="field">
+                    <label>Moneda</label>
+                    <input value="{{ $onlyCurrency['symbol'] }} — {{ $onlyCurrency['name'] }}" disabled>
+                    <input type="hidden" name="currency" value="{{ $onlyCurrency['code'] }}">
+                </div>
+            @endif
 
             <div class="field">
                 <label for="template">Modelo PDF</label>
@@ -257,56 +288,103 @@
 
     <section class="panel">
         <div class="sp-section-title">
-            <h3>Términos y condiciones</h3>
+            <div>
+                <h3 style="margin:0;">Términos y condiciones</h3>
+                <p class="muted" style="margin:4px 0 0;font-size:12.5px;">Se cargan automáticamente tus términos predeterminados. Puedes personalizarlos para esta proforma.</p>
+            </div>
             <button class="button secondary" type="button" data-open-modal="termsEditorModal">Editar términos y condiciones</button>
+        </div>
+        <div id="proforma_terms_preview" class="term-preview" style="padding:14px 16px;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--line);margin-top:6px;">
+            @if (trim(strip_tags($termsContent)) !== '')
+                {!! $termsContent !!}
+            @else
+                <span class="muted">Aún no se han definido términos y condiciones predeterminados. Haz clic en «Editar términos y condiciones» para redactarlos.</span>
+            @endif
         </div>
         <input id="proforma_terms_input" name="terms" type="hidden" value="{{ $termsContent }}">
     </section>
 
-    <section class="panel">
-        <div class="sp-section-title">
-            <h3>Fotos para la proforma</h3>
-        </div>
-
-        <div class="company-grid">
-            <div class="field">
-                <label for="photos">Subir fotos</label>
-                <input id="photos" name="photos[]" type="file" accept="image/*" multiple data-photo-input>
-                <div class="muted" style="margin-top: 7px;">Puedes subir hasta 4 fotos, máximo 20 MB por archivo. Aparecerán al final del PDF.</div>
-                @error('photos') <div class="error">{{ $message }}</div> @enderror
-            </div>
-
-            <div class="field">
-                <label>Fotos actuales</label>
-                @if ($proforma->photos->isEmpty())
-                    <div class="empty" style="padding: 18px;" data-photo-empty>Todavía no hay fotos en esta proforma.</div>
-                @else
-                    <div class="files view-grid">
-                        @foreach ($proforma->photos as $photo)
-                            @php
-                                $photoUrl = \App\Http\Controllers\CompanyProfileController::publicLogoUrl($photo->path);
-                            @endphp
-                            <article class="file">
-                                @if ($photoUrl)
-                                    <img src="{{ $photoUrl }}" alt="Foto de proforma" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;">
-                                @else
-                                    <div class="file-icon">IMG</div>
-                                @endif
-                                <div>
-                                    <h4>{{ $photo->original_name ?: 'Foto '.$loop->iteration }}</h4>
-                                    <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
-                                        <input name="remove_photos[]" type="checkbox" value="{{ $photo->id }}" style="width: auto;">
-                                        Quitar del PDF
-                                    </label>
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
+    @if (auth()->user()?->canUsePhotoGallery())
+        <section class="panel">
+            <div class="sp-section-title">
+                <h3>Fotos para la proforma (Galería de fotos)</h3>
+                @if (isset($galleryPhotos) && $galleryPhotos->isNotEmpty())
+                    <button class="button secondary" type="button" data-open-modal="galleryPhotosModal">
+                        <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path d="M3 7h7l2 2h9v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z"/>
+                        </svg>
+                        <span>Elegir de Galería de fotos</span>
+                    </button>
                 @endif
-                <div class="files view-grid" data-photo-preview-target style="display: none; margin-top: 10px;"></div>
             </div>
-        </div>
-    </section>
+
+            <div class="company-grid">
+                <div class="field">
+                    <label for="photos">Subir fotos desde tu equipo</label>
+                    <input id="photos" name="photos[]" type="file" accept="image/*" multiple data-photo-input>
+                    <div class="muted" style="margin-top: 7px;">Puedes incrustar hasta 4 fotos (subidas o desde tu Galería de fotos), máximo 20 MB por archivo. Aparecerán al final del PDF.</div>
+                    @error('photos') <div class="error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="field">
+                    <label>Fotos actuales en la proforma</label>
+                    @if ($proforma->photos->isEmpty())
+                        <div class="empty" style="padding: 18px;" data-photo-empty>Todavía no hay fotos en esta proforma.</div>
+                    @else
+                        <div class="files view-grid">
+                            @foreach ($proforma->photos as $photo)
+                                @php
+                                    $photoUrl = \App\Http\Controllers\CompanyProfileController::publicLogoUrl($photo->path);
+                                @endphp
+                                <article class="file">
+                                    @if ($photoUrl)
+                                        <img src="{{ $photoUrl }}" alt="Foto de proforma" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;">
+                                    @else
+                                        <div class="file-icon">IMG</div>
+                                    @endif
+                                    <div>
+                                        <h4>{{ $photo->original_name ?: 'Foto '.$loop->iteration }}</h4>
+                                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                                            <input name="remove_photos[]" type="checkbox" value="{{ $photo->id }}" style="width: auto;">
+                                            Quitar del PDF
+                                        </label>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                    @endif
+                    <div class="files view-grid" data-photo-preview-target style="display: none; margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            @if (isset($galleryPhotos) && $galleryPhotos->isNotEmpty())
+                <div id="galleryPhotosModal" class="modal-backdrop" aria-hidden="true">
+                    <div class="modal-content panel">
+                        <div class="modal-header">
+                            <h3>Incrustar fotos desde tu Galería</h3>
+                            <button class="icon-button" type="button" data-close-modal aria-label="Cerrar">×</button>
+                        </div>
+                        <p class="muted" style="margin: 0 0 12px;">Selecciona las fotos de tu galería que deseas incrustar en el PDF de esta proforma (máx. 4 en total):</p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; max-height: 360px; overflow-y: auto;">
+                            @foreach ($galleryPhotos as $gDoc)
+                                @php $gUrl = \App\Http\Controllers\CompanyProfileController::publicLogoUrl($gDoc->file_path); @endphp
+                                @if ($gUrl)
+                                    <label style="position: relative; display: block; cursor: pointer; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #0b1219; padding: 6px;">
+                                        <input type="checkbox" name="gallery_photos[]" value="{{ $gDoc->id }}" style="position: absolute; top: 10px; left: 10px; width: auto; z-index: 2;">
+                                        <img src="{{ $gUrl }}" alt="{{ $gDoc->title }}" style="width: 100%; height: 96px; object-fit: cover; border-radius: 6px; display: block;">
+                                        <span style="display: block; font-size: 12px; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $gDoc->title }}</span>
+                                    </label>
+                                @endif
+                            @endforeach
+                        </div>
+                        <div class="actions" style="margin-top: 16px;">
+                            <button class="button" type="button" data-close-modal>Listo</button>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </section>
+    @endif
 
     <section class="panel">
         <div class="stats" style="margin-bottom: 0;">

@@ -5,6 +5,7 @@
         'accepted' => 'Aceptada',
         'cancelled' => 'Cancelada',
     ];
+    $companyCurrencySymbol = \App\Support\LatamCurrencies::symbol(app(\App\Support\CompanyContext::class)->active()?->default_currency);
 @endphp
 
 @if (session('status'))
@@ -22,7 +23,7 @@
     </article>
     <article class="stat">
         <p class="label">Total cotizado</p>
-        <p class="value">S/. {{ number_format((float) $totalQuoted, 2) }}</p>
+        <p class="value">{{ $companyCurrencySymbol }} {{ number_format((float) $totalQuoted, 2) }}</p>
     </article>
 </section>
 
@@ -76,7 +77,7 @@
                                 <button class="button secondary" type="submit">Guardar</button>
                             </form>
                         </td>
-                        <td>{{ $proforma->currency }} {{ number_format((float) $proforma->total, 2) }}</td>
+                        <td>{{ \App\Support\LatamCurrencies::symbol($proforma->currency) }} {{ number_format((float) $proforma->total, 2) }}</td>
                         <td>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                 <a class="button secondary" href="{{ route('proformas.edit', $proforma) }}" data-ajax-link data-nav="proformas" title="Editar" aria-label="Editar proforma">

@@ -13,6 +13,7 @@ class CompanySetting extends Model
         'commercial_name',
         'tax_id',
         'default_currency',
+        'secondary_currency',
         'default_proforma_template',
         'email',
         'phone',

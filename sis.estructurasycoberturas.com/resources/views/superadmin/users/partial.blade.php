@@ -130,6 +130,7 @@
                     <th class="saas-th">Rol</th>
                     <th class="saas-th">Empresas</th>
                     <th class="saas-th">Estado</th>
+                    <th class="saas-th">Membresía</th>
                     <th class="saas-th">Registro</th>
                     <th class="saas-th" style="text-align: right;">Acciones</th>
                 </tr>
@@ -156,6 +157,16 @@
                                 <span class="saas-badge saas-badge-active">Activo</span>
                             @else
                                 <span class="saas-badge saas-badge-inactive">Suspendido</span>
+                            @endif
+                        </td>
+                        <td class="saas-td">
+                            @if($user->isSuperAdmin())
+                                <span style="color:var(--muted);">—</span>
+                            @elseif($user->hasActiveMembership())
+                                <span class="saas-badge {{ $user->isPremium() ? 'saas-badge-admin' : 'saas-badge-tenant' }}" style="margin-right:4px;">{{ $user->currentTierLabel() }}</span>
+                                <span class="saas-badge {{ $user->membershipDaysLeft() <= 7 ? 'saas-badge-tenant' : 'saas-badge-active' }}">Vence {{ $user->membership_ends_at->format('d/m/Y') }}</span>
+                            @else
+                                <span class="saas-badge saas-badge-inactive">Vencida ({{ $user->currentTierLabel() }})</span>
                             @endif
                         </td>
                         <td class="saas-td">{{ $user->created_at?->format('d/m/Y H:i') }}</td>
@@ -196,7 +207,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="saas-td" style="text-align: center; color: var(--muted); padding: 30px;">
+                        <td colspan="8" class="saas-td" style="text-align: center; color: var(--muted); padding: 30px;">
                             No existen cuentas de usuario registradas.
                         </td>
                     </tr>

@@ -21,6 +21,8 @@ class EnsureUserHasCompany
             if ($user->companies()->count() === 0 && ! $request->routeIs('onboarding.*')) {
                 return redirect()->route('onboarding.create');
             }
+
+            app(\App\Support\CompanyContext::class)->active();
         }
 
         return $next($request);

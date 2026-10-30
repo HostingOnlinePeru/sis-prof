@@ -36,7 +36,7 @@
     </article>
     <article class="stat">
         <p class="label">Total</p>
-        <p class="value">{{ $proforma->currency }} {{ number_format((float) $proforma->total, 2) }}</p>
+        <p class="value">{{ \App\Support\LatamCurrencies::symbol($proforma->currency) }} {{ number_format((float) $proforma->total, 2) }}</p>
     </article>
 </section>
 
@@ -116,6 +116,7 @@
             </div>
         </aside>
 
+        @if (auth()->user()?->canUsePhotoGallery())
         <section class="panel">
             <div class="sp-section-title">
                 <h3>Documentos adjuntos</h3>
@@ -168,6 +169,7 @@
                 </div>
             @endif
         </section>
+        @endif
     </section>
 
     <div id="repositoryPickerModal" class="modal-backdrop" aria-hidden="true">

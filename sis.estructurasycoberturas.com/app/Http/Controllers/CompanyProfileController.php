@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\CompanySetting;
 use App\Support\AppShell;
 use App\Support\CompanyContext;
+use App\Support\LatamCurrencies;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CompanyProfileController extends Controller
@@ -29,10 +31,13 @@ class CompanyProfileController extends Controller
 
     public function update(Request $request): RedirectResponse|JsonResponse|View
     {
+        $validCurrencies = LatamCurrencies::codes();
+
         $data = $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
             'tax_id' => ['nullable', 'string', 'max:20'],
-            'default_currency' => ['required', 'in:PEN,USD'],
+            'default_currency' => ['required', Rule::in($validCurrencies)],
+            'secondary_currency' => ['nullable', Rule::in($validCurrencies)],
             'default_proforma_template' => ['required', 'in:commercial,technical'],
             'address' => ['nullable', 'string', 'max:255'],
             'website' => ['nullable', 'string', 'max:255'],
@@ -83,6 +88,15 @@ class CompanyProfileController extends Controller
         ]);
 
         unset($data['dashboard_logo'], $data['proforma_logo']);
+
+        $data['default_currency'] = $data['default_currency'] ?? 'PEN';
+
+        if ($request->user()?->canUseMultiCurrency()) {
+            $secondary = $data['secondary_currency'] ?? null;
+            $data['secondary_currency'] = ($secondary && $secondary !== $data['default_currency']) ? $secondary : null;
+        } else {
+            $data['secondary_currency'] = null;
+        }
 
         $companyId = $request->input('company_id');
         if ($companyId) {
@@ -145,6 +159,18 @@ class CompanyProfileController extends Controller
 
     public function store(Request $request, CompanyContext $context): RedirectResponse
     {
+        $user = $request->user();
+
+        if (! $user?->canCreateCompany()) {
+            return redirect()
+                ->route('company.edit')
+                ->withErrors([
+                    'business_name' => $user?->isPremium()
+                        ? 'Tu Plan Premium permite registrar hasta un máximo de 2 empresas.'
+                        : 'El Plan Básico solo permite 1 empresa. Mejora al Plan Premium para gestionar hasta 2 empresas.',
+                ]);
+        }
+
         $data = $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
         ]);

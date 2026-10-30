@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Document;
 use App\Models\Product;
 use App\Models\Proforma;
 use App\Models\TermTemplate;
 use App\Support\AppShell;
 use App\Support\CompanyContext;
+use App\Support\LatamCurrencies;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,13 +52,18 @@ class ProformaController extends Controller
 
     public function create(Request $request): View|JsonResponse
     {
+        $company = app(CompanyContext::class)->active();
+        $defaultCurrency = $company?->default_currency ?: 'PEN';
+        $defaultTerms = TermTemplate::query()->where('active', true)->latest()->value('content')
+            ?: TermTemplate::query()->latest()->value('content');
+
         return $this->renderForm($request, new Proforma([
             'issue_date' => now(),
             'valid_until' => now()->addDays(15),
             'status' => 'created',
-            'template' => app(CompanyContext::class)->active()?->default_proforma_template ?: 'commercial',
-            'currency' => app(CompanyContext::class)->active()?->default_currency ?: 'PEN',
-            'terms' => TermTemplate::query()->where('active', true)->latest()->value('content'),
+            'template' => $company?->default_proforma_template ?: 'commercial',
+            'currency' => $defaultCurrency,
+            'terms' => $defaultTerms,
         ]));
     }
 
@@ -141,6 +148,8 @@ class ProformaController extends Controller
 
     private function renderForm(Request $request, Proforma $proforma): View|JsonResponse
     {
+        $canUseGallery = (bool) $request->user()?->canUsePhotoGallery();
+
         return AppShell::render($request, [
             'activePage' => 'proformas',
             'subtitle' => 'Selecciona cliente, productos y documentos; los totales se calculan automáticamente.',
@@ -149,24 +158,33 @@ class ProformaController extends Controller
             'clients' => Client::query()->orderBy('name')->get(),
             'products' => Product::query()->where('active', true)->orderBy('name')->get(),
             'proforma' => $proforma->loadMissing('photos'),
+            'galleryPhotos' => $canUseGallery
+                ? Document::query()->where('active', true)->where('mime_type', 'like', 'image/%')->latest()->get()
+                : collect(),
         ]);
     }
 
     private function validatedData(Request $request): array
     {
-        $companyId = app(CompanyContext::class)->id();
+        $company = app(CompanyContext::class)->active();
+        $canUseMultiCurrency = (bool) $request->user()?->canUseMultiCurrency();
+        $enabledCurrencies = LatamCurrencies::enabledForCompany($company, $canUseMultiCurrency);
+        $allowedCodes = array_keys($enabledCurrencies);
+        $primaryCurrency = $company?->default_currency ?: 'PEN';
 
         $data = $request->validate([
             'client_id' => ['required', Rule::exists(Client::class, 'id')],
             'issue_date' => ['required', 'date'],
             'valid_until' => ['nullable', 'date'],
             'template' => ['required', 'in:commercial,technical'],
-            'currency' => ['required', 'in:PEN,USD'],
+            'currency' => ['nullable', Rule::in(LatamCurrencies::codes())],
             'subject' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'terms' => ['nullable', 'string', 'max:10000'],
             'remove_photos' => ['nullable', 'array'],
             'remove_photos.*' => ['exists:proforma_photos,id'],
+            'gallery_photos' => ['nullable', 'array', 'max:4'],
+            'gallery_photos.*' => [Rule::exists(Document::class, 'id')],
             'photos' => ['nullable', 'array', 'max:4'],
             'photos.*' => [
                 'nullable',
@@ -199,6 +217,18 @@ class ProformaController extends Controller
         }
         unset($item);
 
+        $chosenCurrency = $data['currency'] ?? $primaryCurrency;
+        if (! $canUseMultiCurrency || ! in_array($chosenCurrency, $allowedCodes, true)) {
+            $chosenCurrency = $primaryCurrency;
+        }
+
+        $defaultTerms = TermTemplate::query()->where('active', true)->latest()->value('content')
+            ?: TermTemplate::query()->latest()->value('content');
+        $rawTerms = $data['terms'] ?? null;
+        $resolvedTerms = ($rawTerms !== null && trim(strip_tags($rawTerms)) !== '')
+            ? $rawTerms
+            : $defaultTerms;
+
         return [
             'items' => $data['items'],
             'proforma' => [
@@ -206,41 +236,64 @@ class ProformaController extends Controller
                 'issue_date' => $data['issue_date'],
                 'valid_until' => $data['valid_until'] ?? null,
                 'template' => $data['template'],
-                'currency' => $data['currency'],
+                'currency' => $chosenCurrency,
                 'subject' => $data['subject'] ?? null,
                 'notes' => $data['notes'] ?? null,
-                'terms' => $data['terms'] ?? null,
+                'terms' => $resolvedTerms,
             ],
         ];
     }
 
     private function syncPhotos(Request $request, Proforma $proforma): void
     {
+        if (! $request->user()?->canUsePhotoGallery()) {
+            return;
+        }
+
         $removeIds = $request->input('remove_photos', []);
 
         if ($removeIds) {
             $photosToRemove = $proforma->photos()->whereIn('id', $removeIds)->get();
 
             foreach ($photosToRemove as $photo) {
-                Storage::disk('public')->delete($photo->path);
+                $isSharedWithGallery = Document::query()->where('file_path', $photo->path)->exists();
+                if (! $isSharedWithGallery) {
+                    Storage::disk('public')->delete($photo->path);
+                }
                 $photo->delete();
             }
         }
 
         $existingCount = $proforma->photos()->count();
         $newPhotos = $request->file('photos', []);
+        $galleryPhotoIds = $request->input('gallery_photos', []);
+        $galleryDocs = $galleryPhotoIds
+            ? Document::query()->whereIn('id', $galleryPhotoIds)->where('active', true)->get()
+            : collect();
 
-        if ($existingCount + count($newPhotos) > 4) {
+        if ($existingCount + count($newPhotos) + $galleryDocs->count() > 4) {
             throw ValidationException::withMessages([
-                'photos' => 'La proforma solo puede tener hasta 4 fotos.',
+                'photos' => 'La proforma solo puede tener hasta 4 fotos en total.',
             ]);
         }
 
-        foreach ($newPhotos as $index => $photo) {
+        $sort = $existingCount;
+
+        foreach ($galleryDocs as $doc) {
+            $sort++;
+            $proforma->photos()->create([
+                'path' => $doc->file_path,
+                'original_name' => $doc->original_name ?: $doc->title,
+                'sort' => $sort,
+            ]);
+        }
+
+        foreach ($newPhotos as $photo) {
+            $sort++;
             $proforma->photos()->create([
                 'path' => $photo->store('proformas/photos', 'public'),
                 'original_name' => $photo->getClientOriginalName(),
-                'sort' => $existingCount + $index + 1,
+                'sort' => $sort,
             ]);
         }
     }

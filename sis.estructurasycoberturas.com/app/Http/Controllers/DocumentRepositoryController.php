@@ -17,8 +17,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentRepositoryController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): View|JsonResponse|RedirectResponse
     {
+        if (! $request->user()?->canUsePhotoGallery()) {
+            return redirect()->route('membership.index')
+                ->withErrors(['membership' => 'El módulo de Galería de Fotos está disponible únicamente en el Plan Premium.']);
+        }
+
         $currentFolderId = $request->integer('folder') ?: null;
         $currentFolder = $currentFolderId
             ? DocumentFolder::query()->find($currentFolderId)
@@ -64,6 +69,8 @@ class DocumentRepositoryController extends Controller
 
     public function storeFolder(Request $request): RedirectResponse
     {
+        abort_unless($request->user()?->canUsePhotoGallery(), 403);
+
         $data = $request->validate([
             'parent_id' => ['nullable', Rule::exists(DocumentFolder::class, 'id')],
             'name' => ['required', 'string', 'max:120'],
@@ -78,6 +85,8 @@ class DocumentRepositoryController extends Controller
 
     public function upload(Request $request): RedirectResponse
     {
+        abort_unless($request->user()?->canUsePhotoGallery(), 403);
+
         $data = $request->validate([
             'document_folder_id' => ['nullable', Rule::exists(DocumentFolder::class, 'id')],
             'file' => ['required', 'file', 'max:20480'],

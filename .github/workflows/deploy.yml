@@ -18,10 +18,11 @@ jobs:
           script: |
             /home/deploy/deploy-sisprof.sh
             
-            # Limpieza exhaustiva de cache en la aplicacion
+            # Limpieza exhaustiva de cache y migraciones en la aplicacion
             APP_DIR="/var/www/sisprof.aulanova.org/sis.estructurasycoberturas.com"
             if [ -d "$APP_DIR" ]; then
               cd "$APP_DIR"
+              php artisan migrate --force || true
               php artisan optimize:clear || true
               php artisan view:clear || true
               rm -f storage/framework/views/*.php || true

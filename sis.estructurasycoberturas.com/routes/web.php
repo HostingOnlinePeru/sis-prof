@@ -10,6 +10,9 @@ use App\Http\Controllers\ProformaPdfController;
 use App\Http\Controllers\TermTemplateController;
 use App\Http\Controllers\SuperAdminUserController;
 use App\Http\Controllers\CompanyOnboardingController;
+use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\SuperAdminSubscriptionController;
+use App\Http\Middleware\EnsureActiveMembership;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureUserHasCompany;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -59,10 +62,21 @@ Route::middleware(['auth', EnsureSuperAdmin::class])->group(function () {
     Route::put('/admin/usuarios/{user}', [SuperAdminUserController::class, 'update'])->name('superadmin.users.update');
     Route::patch('/admin/usuarios/{user}/estado', [SuperAdminUserController::class, 'toggleStatus'])->name('superadmin.users.toggle-status');
     Route::delete('/admin/usuarios/{user}', [SuperAdminUserController::class, 'destroy'])->name('superadmin.users.destroy');
+
+    Route::get('/admin/membresias', [SuperAdminSubscriptionController::class, 'index'])->name('superadmin.subscriptions.index');
+    Route::post('/admin/membresias/asignar', [SuperAdminSubscriptionController::class, 'grant'])->name('superadmin.subscriptions.grant');
+    Route::post('/admin/membresias/stripe', [SuperAdminSubscriptionController::class, 'saveStripe'])->name('superadmin.subscriptions.stripe');
+    Route::put('/admin/membresias/planes/{plan}', [SuperAdminSubscriptionController::class, 'updatePlan'])->name('superadmin.subscriptions.plans.update');
 });
 
+// Webhook de Stripe (sin sesión ni CSRF; se valida por firma)
+Route::post('/stripe/webhook', [MembershipController::class, 'webhook'])->name('stripe.webhook');
+
 // Main Business Application Routes (Protected by auth and company check, Tenants only)
-Route::middleware(['auth', EnsureUserIsActive::class, EnsureUserHasCompany::class])->group(function () {
+Route::middleware(['auth', EnsureUserIsActive::class, EnsureUserHasCompany::class, EnsureActiveMembership::class])->group(function () {
+    Route::get('/admin/membresia', [MembershipController::class, 'index'])->name('membership.index');
+    Route::post('/admin/membresia/{plan:slug}/pagar', [MembershipController::class, 'checkout'])->name('membership.checkout');
+    Route::get('/admin/membresia/pago-exitoso', [MembershipController::class, 'success'])->name('membership.success');
     Route::get('/admin', function () {
         return redirect()->route('dashboard.local');
     });
@@ -104,6 +118,8 @@ Route::middleware(['auth', EnsureUserIsActive::class, EnsureUserHasCompany::clas
 
     Route::get('/admin/productos', [ProductCatalogController::class, 'index'])->name('products.index');
     Route::post('/admin/productos/categorias', [ProductCatalogController::class, 'storeCategory'])->name('products.categories.store');
+    Route::put('/admin/productos/categorias/{category}', [ProductCatalogController::class, 'updateCategory'])->name('products.categories.update');
+    Route::delete('/admin/productos/categorias/{category}', [ProductCatalogController::class, 'destroyCategory'])->name('products.categories.destroy');
     Route::post('/admin/productos', [ProductCatalogController::class, 'storeProduct'])->name('products.store');
     Route::put('/admin/productos/{product}', [ProductCatalogController::class, 'updateProduct'])->name('products.update');
     Route::delete('/admin/productos/{product}', [ProductCatalogController::class, 'destroyProduct'])->name('products.destroy');
@@ -127,10 +143,8 @@ Route::middleware(['auth', EnsureUserIsActive::class, EnsureUserHasCompany::clas
     Route::put('/admin/proformas/{proforma}', [ProformaController::class, 'update'])->name('proformas.update');
     Route::patch('/admin/proformas/{proforma}/estado', [ProformaController::class, 'updateStatus'])->name('proformas.status.update');
     Route::delete('/admin/proformas/{proforma}', [ProformaController::class, 'destroy'])->name('proformas.destroy');
+    Route::get('/proformas/{proforma}/pdf', ProformaPdfController::class)->name('proformas.pdf');
 });
-
-Route::get('/proformas/{proforma}/pdf', ProformaPdfController::class)
-    ->name('proformas.pdf');
 
 // Acceso local rapido y pruebas de perfiles
 Route::get('/acceso-local', function (Request $request) {
@@ -179,6 +193,24 @@ Route::get('/acceso-local', function (Request $request) {
         request()->session()->regenerate();
 
         return redirect()->route('dashboard.local');
+    } elseif ($targetRole === 'sanchez') {
+        $user = User::query()->where('email', 'toldosasanchez10@gmail.com')->first();
+
+        if ($user) {
+            Auth::login($user, true);
+            request()->session()->regenerate();
+
+            return redirect()->route('dashboard.local');
+        }
+    } elseif ($targetRole === 'hosting') {
+        $user = User::query()->where('email', 'miguelmundaca79@gmail.com')->first();
+
+        if ($user) {
+            Auth::login($user, true);
+            request()->session()->regenerate();
+
+            return redirect()->route('dashboard.local');
+        }
     } else { // nuevo -> Onboarding test
         $user = User::query()->where('email', 'nuevo@sistema.com')->first()
             ?? User::query()->create([

@@ -1,19 +1,44 @@
 @php
     $dashboardLogo = \App\Http\Controllers\CompanyProfileController::publicLogoUrl($company->dashboard_logo_path ?: $company->proforma_logo_path ?: $company->logo_path);
     $proformaLogo = \App\Http\Controllers\CompanyProfileController::publicLogoUrl($company->proforma_logo_path ?: $company->dashboard_logo_path ?: $company->logo_path);
+    $authUser = auth()->user();
+    $userCompaniesCount = $authUser?->companies()->count() ?? 1;
+    $latamCurrencies = \App\Support\LatamCurrencies::all();
+    $selectedPrimaryCurrency = old('default_currency', $company->default_currency ?: 'PEN');
+    $selectedSecondaryCurrency = old('secondary_currency', $company->secondary_currency);
 @endphp
 
 @if (session('status'))
     <div class="notice">{{ session('status') }}</div>
 @endif
 
+@if ($errors->any())
+    <div class="errors">
+        @foreach ($errors->all() as $error)
+            <div>{{ $error }}</div>
+        @endforeach
+    </div>
+@endif
+
 <section class="panel" style="margin-bottom: 18px;">
     <div class="sp-section-title">
         <div>
             <h3>Empresa activa: {{ $company->business_name ?: 'Nueva empresa' }}</h3>
-            <p class="muted" style="margin: 6px 0 0;">Los clientes, productos, términos, documentos y proformas se guardan por separado para cada empresa.</p>
+            <p class="muted" style="margin: 6px 0 0;">
+                @if ($authUser?->isPremium())
+                    Plan Premium activo: Puedes gestionar hasta 2 empresas independientes ({{ $userCompaniesCount }}/2 registradas).
+                @else
+                    Plan Básico activo: Incluye 1 empresa registrada.
+                @endif
+            </p>
         </div>
-        <button class="button secondary" type="button" data-open-modal="newCompanyModal">Nueva empresa</button>
+        @if ($authUser?->isPremium())
+            @if ($authUser->canCreateCompany())
+                <button class="button secondary" type="button" data-open-modal="newCompanyModal">+ Nueva empresa ({{ $userCompaniesCount }}/2)</button>
+            @else
+                <span class="badge">2 / 2 Empresas registradas</span>
+            @endif
+        @endif
     </div>
 </section>
 
@@ -37,12 +62,37 @@
         </div>
 
         <div class="field">
-            <label for="default_currency">Moneda</label>
+            <label for="default_currency">Moneda principal (Signo de moneda)</label>
             <select id="default_currency" name="default_currency" required>
-                <option value="PEN" @selected(old('default_currency', $company->default_currency ?: 'PEN') === 'PEN')>Soles (PEN)</option>
-                <option value="USD" @selected(old('default_currency', $company->default_currency) === 'USD')>Dólares (USD)</option>
+                @foreach ($latamCurrencies as $code => $item)
+                    <option value="{{ $code }}" @selected($selectedPrimaryCurrency === $code)>
+                        {{ $item['symbol'] }} — {{ $item['name'] }} ({{ $item['country'] }})
+                    </option>
+                @endforeach
             </select>
             @error('default_currency') <div class="error">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="field">
+            <label for="secondary_currency" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span>Segunda moneda (Multimoneda)</span>
+                <span class="sp-quick-badge" style="padding:2px 7px;font-size:10px;">PRO</span>
+            </label>
+            @if ($authUser?->canUseMultiCurrency())
+                <select id="secondary_currency" name="secondary_currency">
+                    <option value="">Ninguna (Usar solo 1 moneda)</option>
+                    @foreach ($latamCurrencies as $code => $item)
+                        <option value="{{ $code }}" @selected($selectedSecondaryCurrency === $code)>
+                            {{ $item['symbol'] }} — {{ $item['name'] }} ({{ $item['country'] }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('secondary_currency') <div class="error">{{ $message }}</div> @enderror
+            @else
+                <select id="secondary_currency" disabled style="opacity:.6;cursor:not-allowed;">
+                    <option value="">Bloqueado en Plan Básico (Máximo 1 moneda)</option>
+                </select>
+            @endif
         </div>
 
         <div class="field">
@@ -114,16 +164,17 @@
     </div>
 </form>
 
+@if ($authUser?->isPremium() && $authUser->canCreateCompany())
 <div id="newCompanyModal" class="modal-backdrop" aria-hidden="true">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Crear nueva empresa</h3>
+            <h3>Crear segunda empresa (Plan Premium)</h3>
             <button class="icon-button" type="button" data-close-modal aria-label="Cerrar">×</button>
         </div>
         <form method="post" action="{{ route('company.store') }}">
             @csrf
             <label for="new_company_name">Nombre o razón social</label>
-            <input id="new_company_name" name="business_name" required placeholder="Ej. Mi nueva empresa">
+            <input id="new_company_name" name="business_name" required placeholder="Ej. Mi segunda empresa S.A.C.">
             <div class="actions">
                 <button class="button secondary" type="button" data-close-modal>Cancelar</button>
                 <button class="button" type="submit">Crear empresa</button>
@@ -131,3 +182,4 @@
         </form>
     </div>
 </div>
+@endif
