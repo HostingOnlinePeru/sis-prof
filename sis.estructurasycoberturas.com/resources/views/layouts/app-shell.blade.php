@@ -1056,16 +1056,18 @@
                     </span>
                     <span>Clientes</span>
                 </a>
-                <a class="{{ $activePage === 'products' ? 'active' : '' }}" href="{{ route('products.index') }}" data-ajax-link data-nav="products">
-                    <span class="app-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                            <path d="m21 16-9 5-9-5V8l9-5 9 5z"/>
-                            <path d="m3.3 7.7 8.7 5 8.7-5"/>
-                            <path d="M12 22V12"/>
-                        </svg>
-                    </span>
-                    <span>Productos</span>
-                </a>
+                @if (auth()->user()?->canUseProductsModule())
+                    <a class="{{ $activePage === 'products' ? 'active' : '' }}" href="{{ route('products.index') }}" data-ajax-link data-nav="products">
+                        <span class="app-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path d="m21 16-9 5-9-5V8l9-5 9 5z"/>
+                                <path d="m3.3 7.7 8.7 5 8.7-5"/>
+                                <path d="M12 22V12"/>
+                            </svg>
+                        </span>
+                        <span>Productos</span>
+                    </a>
+                @endif
                 @if (auth()->user()?->canUsePhotoGallery())
                     <a class="{{ $activePage === 'documents' ? 'active' : '' }}" href="{{ route('documents.index') }}" data-ajax-link data-nav="documents">
                         <span class="app-icon">

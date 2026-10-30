@@ -69,20 +69,34 @@ class MembershipTest extends TestCase
         $basicUser = $this->createTenantWithCompany(['membership_tier' => 'basic']);
         $premiumUser = $this->createTenantWithCompany(['membership_tier' => 'premium']);
 
-        // Basic user cannot access Photo Gallery nor create a 2nd company
+        // Basic user cannot access Photo Gallery, Products module, nor create a 2nd company
         $this->actingAs($basicUser)
             ->get(route('documents.index'))
             ->assertRedirect(route('membership.index'));
 
-        $this->assertFalse($basicUser->canCreateCompany());
+        $this->actingAs($basicUser)
+            ->get(route('products.index'))
+            ->assertRedirect(route('membership.index'));
 
-        // Premium user can access Photo Gallery and create up to 2 companies
+        $this->assertFalse($basicUser->canCreateCompany());
+        $this->assertFalse($basicUser->canUseProductsModule());
+        $this->assertEquals(0, $basicUser->maxProducts());
+
+        // Premium user can access Photo Gallery, Products module (max 20), and create up to 2 companies
         $this->actingAs($premiumUser)
             ->get(route('documents.index'))
             ->assertOk();
 
+        $this->actingAs($premiumUser)
+            ->get(route('products.index'))
+            ->assertOk();
+
         $this->assertTrue($premiumUser->canCreateCompany());
         $this->assertTrue($premiumUser->canUseMultiCurrency());
+        $this->assertTrue($premiumUser->canUseProductsModule());
+        $this->assertEquals(20, $premiumUser->maxProducts());
+        $this->assertTrue($premiumUser->canCreateProduct(19));
+        $this->assertFalse($premiumUser->canCreateProduct(20));
     }
 
     public function test_stripe_checkout_and_webhook_activate_premium_membership_idempotently(): void

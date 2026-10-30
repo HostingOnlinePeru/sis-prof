@@ -124,7 +124,7 @@
             </button>
         </div>
         <p class="mb-tier-desc" id="mb-tier-hint">
-            {{ $defaultTab === 'premium' ? 'Plan Premium: Hasta 2 empresas, hasta 2 monedas de LATAM/USD y Galería de Fotos para Proformas.' : 'Plan Básico: Ideal para 1 empresa con 1 moneda a elección (cualquier país de LATAM) y proformas ilimitadas.' }}
+            {{ $defaultTab === 'premium' ? 'Plan Premium: Hasta 2 empresas, hasta 2 monedas de LATAM/USD, Módulo de Productos (máx. 20) y Galería de Fotos.' : 'Plan Básico: Ideal para 1 empresa con 1 moneda a elección (cualquier país de LATAM) y proformas ilimitadas.' }}
         </p>
     </div>
 
@@ -140,8 +140,9 @@
                 <ul class="mb-features">
                     <li>1 Empresa registrada</li>
                     <li>1 Moneda a elección (Todo LATAM / USD)</li>
-                    <li>Proformas, clientes y productos ilimitados</li>
+                    <li>Proformas y clientes ilimitados</li>
                     <li>Envío por correo y exportación PDF</li>
+                    <li class="is-disabled">Sin Módulo de Productos</li>
                     <li class="is-disabled">Sin 2da moneda simultánea (Multimoneda)</li>
                     <li class="is-disabled">Sin Galería de Fotos para Proformas</li>
                     <li class="is-disabled">Sin Multi-empresa (2 empresas)</li>
@@ -173,8 +174,9 @@
                 <ul class="mb-features">
                     <li><strong>Hasta 2 Empresas</strong> (Multi-empresa)</li>
                     <li><strong>Multimoneda PRO</strong> (Hasta 2 monedas de LATAM / USD)</li>
+                    <li><strong>Módulo de Productos</strong> (Hasta máx. 20 productos)</li>
                     <li><strong>Galería de Fotos</strong> para incrustar en Proformas</li>
-                    <li>Proformas, clientes y productos ilimitados</li>
+                    <li>Proformas y clientes ilimitados</li>
                     <li>Envío por correo y exportación PDF</li>
                 </ul>
                 <form method="post" action="{{ route('membership.checkout', $plan) }}">
@@ -241,8 +243,8 @@ window.switchMembershipTab = function switchMembershipTab(tier) {
     if (panelPremium) panelPremium.classList.toggle('is-active', isPremium);
     if (hint) {
         hint.textContent = isPremium
-            ? 'Plan Premium: Hasta 2 empresas, Multimoneda (Soles/Dólares) y Galería de Fotos para Proformas.'
-            : 'Plan Básico: Ideal para 1 empresa en Soles con proformas, clientes y productos ilimitados.';
+            ? 'Plan Premium: Hasta 2 empresas, hasta 2 monedas de LATAM/USD, Módulo de Productos (máx. 20) y Galería de Fotos.'
+            : 'Plan Básico: Ideal para 1 empresa con 1 moneda a elección (cualquier país de LATAM) y proformas ilimitadas.';
     }
 };
 </script>

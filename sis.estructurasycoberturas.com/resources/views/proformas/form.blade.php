@@ -183,13 +183,17 @@
                         <button class="button secondary" type="button" data-proforma-remove>Quitar ítem</button>
                     </div>
                     <div class="company-grid">
-                        <div class="field">
-                            <label>Producto</label>
-                            <select name="items[{{ $index }}][product_id]" data-product-select>
-                                <option value="">Descripción manual</option>
-                                {!! $productOptions($item['product_id'] ?? null) !!}
-                            </select>
-                        </div>
+                        @if (auth()->user()?->canUseProductsModule())
+                            <div class="field">
+                                <label>Producto</label>
+                                <select name="items[{{ $index }}][product_id]" data-product-select>
+                                    <option value="">Descripción manual</option>
+                                    {!! $productOptions($item['product_id'] ?? null) !!}
+                                </select>
+                            </div>
+                        @else
+                            <input type="hidden" name="items[{{ $index }}][product_id]" value="">
+                        @endif
 
                         <div class="field">
                             <label>Unidad</label>
@@ -240,13 +244,17 @@
                     <button class="button secondary" type="button" data-proforma-remove>Quitar ítem</button>
                 </div>
                 <div class="company-grid">
-                    <div class="field">
-                        <label>Producto</label>
-                        <select name="items[__INDEX__][product_id]" data-product-select>
-                            <option value="">Descripción manual</option>
-                            {!! $productOptions() !!}
-                        </select>
-                    </div>
+                    @if (auth()->user()?->canUseProductsModule())
+                        <div class="field">
+                            <label>Producto</label>
+                            <select name="items[__INDEX__][product_id]" data-product-select>
+                                <option value="">Descripción manual</option>
+                                {!! $productOptions() !!}
+                            </select>
+                        </div>
+                    @else
+                        <input type="hidden" name="items[__INDEX__][product_id]" value="">
+                    @endif
                     <div class="field">
                         <label>Unidad</label>
                         <input name="items[__INDEX__][unit]" value="UND" required>

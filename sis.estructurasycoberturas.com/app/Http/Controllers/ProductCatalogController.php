@@ -14,8 +14,24 @@ use Illuminate\View\View;
 
 class ProductCatalogController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    private function ensureProductsModuleAllowed(Request $request): ?RedirectResponse
     {
+        $user = $request->user();
+        if (! $user || $user->canUseProductsModule()) {
+            return null;
+        }
+
+        return redirect()
+            ->route('membership.index')
+            ->withErrors(['membership' => 'El módulo de Productos está disponible únicamente en el Plan Premium (PRO).']);
+    }
+
+    public function index(Request $request): View|JsonResponse|RedirectResponse
+    {
+        if ($denied = $this->ensureProductsModuleAllowed($request)) {
+            return $denied;
+        }
+
         $currentCategoryId = $request->integer('category') ?: null;
         $currentCategory = $currentCategoryId
             ? ProductCategory::query()->find($currentCategoryId)
@@ -55,6 +71,10 @@ class ProductCatalogController extends Controller
 
     public function storeCategory(Request $request): RedirectResponse|JsonResponse|View
     {
+        if ($denied = $this->ensureProductsModuleAllowed($request)) {
+            return $denied;
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:500'],
@@ -74,6 +94,10 @@ class ProductCatalogController extends Controller
 
     public function updateCategory(Request $request, ProductCategory $category): RedirectResponse|JsonResponse|View
     {
+        if ($denied = $this->ensureProductsModuleAllowed($request)) {
+            return $denied;
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:500'],
@@ -93,6 +117,10 @@ class ProductCatalogController extends Controller
 
     public function destroyCategory(Request $request, ProductCategory $category): RedirectResponse|JsonResponse|View
     {
+        if ($denied = $this->ensureProductsModuleAllowed($request)) {
+            return $denied;
+        }
+
         Product::query()->where('product_category_id', $category->id)->update(['product_category_id' => null]);
         $category->delete();
         session()->flash('status', 'Categoría eliminada correctamente.');
@@ -110,6 +138,23 @@ class ProductCatalogController extends Controller
 
     public function storeProduct(Request $request): RedirectResponse|JsonResponse|View
     {
+        if ($denied = $this->ensureProductsModuleAllowed($request)) {
+            return $denied;
+        }
+
+        $user = $request->user();
+        $currentCount = Product::query()->count();
+
+        if ($user && ! $user->canCreateProduct($currentCount)) {
+            $max = $user->maxProducts();
+
+            return redirect()
+                ->route('products.index')
+                ->withErrors([
+                    'name' => "Has alcanzado el límite máximo de {$max} productos permitidos en el Plan Premium ({$currentCount}/{$max}).",
+                ]);
+        }
+
         $data = $this->validateProduct($request);
         $data['active'] = $request->boolean('active');
 
@@ -131,6 +176,10 @@ class ProductCatalogController extends Controller
 
     public function updateProduct(Request $request, Product $product): RedirectResponse|JsonResponse|View
     {
+        if ($denied = $this->ensureProductsModuleAllowed($request)) {
+            return $denied;
+        }
+
         $data = $this->validateProduct($request);
         $data['active'] = $request->boolean('active');
 
@@ -152,6 +201,10 @@ class ProductCatalogController extends Controller
 
     public function destroyProduct(Request $request, Product $product): RedirectResponse|JsonResponse|View
     {
+        if ($denied = $this->ensureProductsModuleAllowed($request)) {
+            return $denied;
+        }
+
         $categoryId = $product->product_category_id;
         $product->delete();
         session()->flash('status', 'Producto eliminado correctamente.');

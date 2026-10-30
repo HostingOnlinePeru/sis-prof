@@ -149,14 +149,17 @@ class ProformaController extends Controller
     private function renderForm(Request $request, Proforma $proforma): View|JsonResponse
     {
         $canUseGallery = (bool) $request->user()?->canUsePhotoGallery();
+        $canUseProducts = (bool) $request->user()?->canUseProductsModule();
 
         return AppShell::render($request, [
             'activePage' => 'proformas',
-            'subtitle' => 'Selecciona cliente, productos y documentos; los totales se calculan automáticamente.',
+            'subtitle' => 'Selecciona cliente y redacta los ítems de tu cotización; los totales se calculan automáticamente.',
             'title' => $proforma->exists ? 'Editar Proforma' : 'Generar Proforma',
         ], 'proformas.form', [
             'clients' => Client::query()->orderBy('name')->get(),
-            'products' => Product::query()->where('active', true)->orderBy('name')->get(),
+            'products' => $canUseProducts
+                ? Product::query()->where('active', true)->orderBy('name')->get()
+                : collect(),
             'proforma' => $proforma->loadMissing('photos'),
             'galleryPhotos' => $canUseGallery
                 ? Document::query()->where('active', true)->where('mime_type', 'like', 'image/%')->latest()->get()

@@ -36,15 +36,27 @@
         </div>
         <p class="sp-value">{{ $stats['clientes'] }}</p>
     </article>
-    <article class="sp-card">
-        <div class="sp-kpi-top">
-            <p class="sp-label">Productos</p>
-            <span class="sp-kpi-icon" style="color:#c084fc;" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3 4 7.5 12 12l8-4.5L12 3z"/><path d="M4 7.5v9L12 21l8-4.5v-9"/><path d="M12 12v9"/></svg>
-            </span>
-        </div>
-        <p class="sp-value">{{ $stats['productos'] }}</p>
-    </article>
+    @if (auth()->user()?->canUseProductsModule())
+        <article class="sp-card">
+            <div class="sp-kpi-top">
+                <p class="sp-label">Productos</p>
+                <span class="sp-kpi-icon" style="color:#c084fc;" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3 4 7.5 12 12l8-4.5L12 3z"/><path d="M4 7.5v9L12 21l8-4.5v-9"/><path d="M12 12v9"/></svg>
+                </span>
+            </div>
+            <p class="sp-value">{{ $stats['productos'] }}<span style="font-size:15px;color:var(--muted);font-weight:700;">/{{ \App\Models\User::PRO_MAX_PRODUCTS }}</span></p>
+        </article>
+    @else
+        <article class="sp-card">
+            <div class="sp-kpi-top">
+                <p class="sp-label">Plan activo</p>
+                <span class="sp-kpi-icon" style="color:#fbbf24;" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>
+                </span>
+            </div>
+            <p class="sp-value" style="font-size:22px;">{{ auth()->user()?->currentTierLabel() ?? 'Básico' }}</p>
+        </article>
+    @endif
 </section>
 
 <section class="sp-content">
@@ -172,24 +184,44 @@
                 </div>
             </a>
 
-            <a class="sp-quick-card" href="{{ route('products.index', ['create' => 1]) }}" data-ajax-link data-nav="products">
-                <div class="sp-quick-top">
-                    <span class="sp-quick-icon emerald" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 3 4 7.5 12 12l8-4.5L12 3z"/>
-                            <path d="M4 7.5v9L12 21l8-4.5v-9"/>
-                            <path d="M12 12v9"/>
-                        </svg>
-                    </span>
-                    <span class="sp-quick-arrow" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg>
-                    </span>
-                </div>
-                <div class="sp-quick-text">
-                    <span class="sp-quick-title">Agregar producto</span>
-                    <span class="sp-quick-sub">Catálogo, categorías y precios</span>
-                </div>
-            </a>
+            @if (auth()->user()?->canUseProductsModule())
+                <a class="sp-quick-card" href="{{ route('products.index', ['create' => 1]) }}" data-ajax-link data-nav="products">
+                    <div class="sp-quick-top">
+                        <span class="sp-quick-icon emerald" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 3 4 7.5 12 12l8-4.5L12 3z"/>
+                                <path d="M4 7.5v9L12 21l8-4.5v-9"/>
+                                <path d="M12 12v9"/>
+                            </svg>
+                        </span>
+                        <span class="sp-quick-arrow" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg>
+                        </span>
+                    </div>
+                    <div class="sp-quick-text">
+                        <span class="sp-quick-title">Agregar producto</span>
+                        <span class="sp-quick-sub">Catálogo, categorías y precios</span>
+                    </div>
+                </a>
+            @else
+                <a class="sp-quick-card" href="{{ route('proformas.index') }}" data-ajax-link data-nav="proformas">
+                    <div class="sp-quick-top">
+                        <span class="sp-quick-icon emerald" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <path d="M14 2v6h6M8 13h8M8 17h6"/>
+                            </svg>
+                        </span>
+                        <span class="sp-quick-arrow" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg>
+                        </span>
+                    </div>
+                    <div class="sp-quick-text">
+                        <span class="sp-quick-title">Mis proformas</span>
+                        <span class="sp-quick-sub">Historial, PDF y envío por correo</span>
+                    </div>
+                </a>
+            @endif
 
             @if (auth()->user()?->canUsePhotoGallery())
                 <a class="sp-quick-card" href="{{ route('documents.index') }}" data-ajax-link data-nav="documents">

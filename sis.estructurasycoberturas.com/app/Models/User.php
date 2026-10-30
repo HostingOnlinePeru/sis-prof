@@ -36,6 +36,8 @@ class User extends Authenticatable implements FilamentUser
 
     public const TRIAL_DAYS = 7;
 
+    public const PRO_MAX_PRODUCTS = 20;
+
     protected static function booted(): void
     {
         static::creating(function (User $user) {
@@ -116,6 +118,21 @@ class User extends Authenticatable implements FilamentUser
     public function canUsePhotoGallery(): bool
     {
         return $this->isPremium();
+    }
+
+    public function canUseProductsModule(): bool
+    {
+        return $this->isSuperAdmin() || $this->isPremium();
+    }
+
+    public function maxProducts(): int
+    {
+        return $this->canUseProductsModule() ? self::PRO_MAX_PRODUCTS : 0;
+    }
+
+    public function canCreateProduct(int $currentCount): bool
+    {
+        return $this->canUseProductsModule() && $currentCount < self::PRO_MAX_PRODUCTS;
     }
 
     public function currentPlanName(): ?string

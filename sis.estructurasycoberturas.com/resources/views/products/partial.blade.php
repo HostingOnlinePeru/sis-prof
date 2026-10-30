@@ -10,10 +10,17 @@
     </div>
 @endif
 
+@php
+    $maxProducts = auth()->user()?->maxProducts();
+    $canCreateProduct = auth()->user()?->canCreateProduct((int) $totalProducts) ?? true;
+@endphp
+
 <section class="stats" aria-label="Resumen de productos">
     <article class="stat">
         <p class="label">Productos</p>
-        <p class="value">{{ $totalProducts }}</p>
+        <p class="value">
+            {{ $totalProducts }}@if ($maxProducts !== null)<span style="font-size: 16px; color: var(--muted); font-weight: 700;"> / {{ $maxProducts }}</span>@endif
+        </p>
     </article>
     <article class="stat">
         <p class="label">Activos</p>
@@ -96,13 +103,19 @@
                     <h3 style="margin: 0; font-size: 18px; color: #fff;">{{ $currentCategory ? 'Productos en: '.$currentCategory->name : 'Catálogo de productos' }}</h3>
                     <p style="margin: 4px 0 0; font-size: 13px; color: var(--muted);">{{ $products->count() }} producto(s) registrado(s)</p>
                 </div>
-                <button class="button" type="button" onclick="openProductModal()" style="display: inline-flex; align-items: center; gap: 8px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
-                        <path d="M5 12h14"/>
-                        <path d="M12 5v14"/>
-                    </svg>
-                    <span>Crear nuevo producto</span>
-                </button>
+                @if ($canCreateProduct)
+                    <button class="button" type="button" onclick="openProductModal()" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+                            <path d="M5 12h14"/>
+                            <path d="M12 5v14"/>
+                        </svg>
+                        <span>Crear nuevo producto ({{ $totalProducts }}/{{ $maxProducts }})</span>
+                    </button>
+                @else
+                    <button class="button secondary" type="button" disabled style="opacity:.65;cursor:not-allowed;">
+                        Límite máximo alcanzado ({{ $totalProducts }}/{{ $maxProducts }} productos)
+                    </button>
+                @endif
             </div>
 
             <form class="search" method="get" action="{{ route('products.index') }}" data-ajax-form style="margin-bottom: 18px;">
