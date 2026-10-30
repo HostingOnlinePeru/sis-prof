@@ -58,12 +58,12 @@
                             id="email"
                             name="email"
                             type="email"
-                            value="{{ old('email', 'superadmin@sistema.com') }}"
+                            value="{{ old('email') }}"
                             autocomplete="email"
                             required
                             autofocus
                             class="login-input"
-                            placeholder="superadmin@sistema.com"
+                            placeholder="correo@tuempresa.com"
                         />
                     </div>
 
@@ -74,7 +74,7 @@
                                 id="login-password"
                                 name="password"
                                 type="password"
-                                value="admin123"
+                                value=""
                                 autocomplete="current-password"
                                 required
                                 class="login-input login-pass-input"
