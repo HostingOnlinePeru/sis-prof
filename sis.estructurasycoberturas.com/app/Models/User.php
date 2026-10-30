@@ -77,7 +77,8 @@ class User extends Authenticatable implements FilamentUser
             return 0;
         }
 
-        return (int) ceil(now()->diffInSeconds($this->membership_ends_at) / 86400);
+        // Días calendario: baja 1 cada medianoche (activado ayer con 1 año => 364).
+        return max(1, (int) now()->startOfDay()->diffInDays($this->membership_ends_at->copy()->startOfDay()));
     }
 
     public function isOnTrial(): bool
