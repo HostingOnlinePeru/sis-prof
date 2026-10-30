@@ -1,0 +1,18 @@
+=====================================================
+ACCESOS OFICIALES - SISPROF (https://sisprof.aulanova.org/admin/login)
+=====================================================
+
+1. SUPER ADMINISTRADOR (Gestión de Usuarios y Membresías)
+   - Correo:      superadmin@sistema.com
+   - Contraseña:  SisProf#Admin2026!Pro
+   - Panel:       https://sisprof.aulanova.org/admin/usuarios
+
+2. TOLDOS SÁNCHEZ (Plan Básico - 1 Año)
+   - Correo:      toldosasanchez10@gmail.com
+   - Contraseña:  Toldos$Sanchez2026!Pe
+   - Login:       https://sisprof.aulanova.org/admin/login
+
+3. HOSTING ONLINE PERÚ (Plan Premium PRO - 1 Año)
+   - Correo:      miguelmundaca79@gmail.com
+   - Contraseña:  Hosting#Online2026!Pro
+   - Login:       https://sisprof.aulanova.org/admin/login
