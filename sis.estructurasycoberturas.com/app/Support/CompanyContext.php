@@ -14,7 +14,7 @@ class CompanyContext
         $user = Auth::user();
 
         if (! $user) {
-            return CompanySetting::query()->orderBy('business_name')->get();
+            return collect();
         }
 
         if ($user->isSuperAdmin()) {

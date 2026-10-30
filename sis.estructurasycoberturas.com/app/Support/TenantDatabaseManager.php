@@ -25,7 +25,8 @@ class TenantDatabaseManager
         $dir = database_path('tenants');
 
         if (! File::exists($dir)) {
-            File::makeDirectory($dir, 0755, true);
+            File::makeDirectory($dir, 0777, true);
+            @chmod($dir, 0777);
         }
 
         $dbPath = static::getDatabasePath($company);
@@ -34,17 +35,26 @@ class TenantDatabaseManager
 
         if ($isNew) {
             File::put($dbPath, '');
+            @chmod($dbPath, 0666);
             if ($company->db_path !== $dbPath) {
-                $company->update(['db_path' => $dbPath]);
+                try {
+                    $company->update(['db_path' => $dbPath]);
+                } catch (\Throwable $e) {
+                    // Ignore if central DB is temporarily read-only
+                }
             }
         }
 
         static::configureConnection($dbPath);
 
-        if ($isNew || ! Schema::connection('tenant')->hasTable('clients')) {
-            static::runTenantMigrations();
-        } else {
-            static::ensureTenantColumns();
+        try {
+            if ($isNew || ! Schema::connection('tenant')->hasTable('clients')) {
+                static::runTenantMigrations();
+            } else {
+                static::ensureTenantColumns();
+            }
+        } catch (\Throwable $e) {
+            report($e);
         }
 
         return $dbPath;

@@ -18,14 +18,18 @@ jobs:
           script: |
             /home/deploy/deploy-sisprof.sh
             
-            # Limpieza exhaustiva de cache y migraciones en la aplicacion
+            # Limpieza exhaustiva de cache, migraciones y permisos en la aplicacion
             APP_DIR="/var/www/sisprof.aulanova.org/sis.estructurasycoberturas.com"
             if [ -d "$APP_DIR" ]; then
               cd "$APP_DIR"
+              mkdir -p database/tenants storage/logs storage/framework/views storage/framework/cache storage/framework/sessions
               php artisan migrate --force || true
               php artisan optimize:clear || true
               php artisan view:clear || true
               rm -f storage/framework/views/*.php || true
+              chmod -R a+rwX database storage bootstrap/cache 2>/dev/null || true
+              sudo chown -R www-data:www-data database storage bootstrap/cache 2>/dev/null || true
+              sudo chmod -R 775 database storage bootstrap/cache 2>/dev/null || true
             fi
             
             # Reset de OPcache mediante peticion web local y reload de servicio
