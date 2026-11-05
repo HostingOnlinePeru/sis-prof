@@ -186,9 +186,9 @@ class CompanyProfileController extends Controller
             return redirect()
                 ->route('company.edit')
                 ->withErrors([
-                    'business_name' => $user?->isPremium()
-                        ? 'Tu Plan Premium permite registrar hasta un máximo de 2 empresas.'
-                        : 'El Plan Básico solo permite 1 empresa. Mejora al Plan Premium para gestionar hasta 2 empresas.',
+                    'business_name' => $user?->maxCompanies() > 1
+                        ? "Tu Plan {$user->currentTierLabel()} permite registrar hasta un máximo de {$user->maxCompanies()} empresas."
+                        : 'El Plan Básico solo permite 1 empresa. Mejora al Plan Stándar o Plan Corporativo para gestionar hasta 2 empresas.',
                 ]);
         }
 

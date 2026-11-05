@@ -23,7 +23,7 @@ class ProductCatalogController extends Controller
 
         return redirect()
             ->route('membership.index')
-            ->withErrors(['membership' => 'El módulo de Productos está disponible únicamente en el Plan Premium (PRO).']);
+            ->withErrors(['membership' => 'El módulo de Productos está disponible en el Plan Stándar y en el Plan Corporativo (PRO).']);
     }
 
     public function index(Request $request): View|JsonResponse|RedirectResponse
@@ -151,7 +151,7 @@ class ProductCatalogController extends Controller
             return redirect()
                 ->route('products.index')
                 ->withErrors([
-                    'name' => "Has alcanzado el límite máximo de {$max} productos permitidos en el Plan Premium ({$currentCount}/{$max}).",
+                    'name' => "Has alcanzado el límite máximo de {$max} productos permitidos en tu Plan {$user->currentTierLabel()} ({$currentCount}/{$max}).",
                 ]);
         }
 

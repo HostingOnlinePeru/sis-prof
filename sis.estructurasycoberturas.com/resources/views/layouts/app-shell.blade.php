@@ -987,7 +987,7 @@
                 <p>Panel de Administración SaaS</p>
             @else
                 <h1>{{ $company?->business_name ?: 'Sistema de Proformas' }}</h1>
-                @if (auth()->user()?->isPremium() && isset($companies) && $companies->count() > 1)
+                @if ((auth()->user()?->maxCompanies() ?? 1) > 1 && isset($companies) && $companies->count() > 1)
                     <form class="company-switcher" method="post" action="{{ route('company.switch') }}">
                         @csrf
                         <label for="sidebar-company-select">Cambiar empresa ({{ $companies->count() }}/2)</label>

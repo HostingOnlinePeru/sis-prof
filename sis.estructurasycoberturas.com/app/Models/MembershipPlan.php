@@ -20,12 +20,21 @@ class MembershipPlan extends Model
 
     public function isPremium(): bool
     {
-        return $this->tier === 'premium';
+        return in_array($this->tier, ['premium', 'corporate'], true);
+    }
+
+    public function isStandard(): bool
+    {
+        return $this->tier === 'standard';
     }
 
     public function tierLabel(): string
     {
-        return $this->isPremium() ? 'Premium' : 'Básico';
+        return match ($this->tier) {
+            'premium', 'corporate' => 'Corporativo',
+            'standard' => 'Stándar',
+            default => 'Básico',
+        };
     }
 
     public function fullName(): string

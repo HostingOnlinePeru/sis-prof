@@ -25,18 +25,18 @@
         <div>
             <h3>Empresa activa: {{ $company->business_name ?: 'Nueva empresa' }}</h3>
             <p class="muted" style="margin: 6px 0 0;">
-                @if ($authUser?->isPremium())
-                    Plan Premium activo: Puedes gestionar hasta 2 empresas independientes ({{ $userCompaniesCount }}/2 registradas).
+                @if (($authUser?->maxCompanies() ?? 1) > 1)
+                    Plan {{ $authUser->currentTierLabel() }} activo: Puedes gestionar hasta {{ $authUser->maxCompanies() }} empresas independientes ({{ $userCompaniesCount }}/{{ $authUser->maxCompanies() }} registradas).
                 @else
                     Plan Básico activo: Incluye 1 empresa registrada.
                 @endif
             </p>
         </div>
-        @if ($authUser?->isPremium())
+        @if (($authUser?->maxCompanies() ?? 1) > 1)
             @if ($authUser->canCreateCompany())
-                <button class="button secondary" type="button" data-open-modal="newCompanyModal">+ Nueva empresa ({{ $userCompaniesCount }}/2)</button>
+                <button class="button secondary" type="button" data-open-modal="newCompanyModal">+ Nueva empresa ({{ $userCompaniesCount }}/{{ $authUser->maxCompanies() }})</button>
             @else
-                <span class="badge">2 / 2 Empresas registradas</span>
+                <span class="badge">{{ $userCompaniesCount }} / {{ $authUser->maxCompanies() }} Empresas registradas</span>
             @endif
         @endif
     </div>
@@ -90,7 +90,7 @@
                 @error('secondary_currency') <div class="error">{{ $message }}</div> @enderror
             @else
                 <select id="secondary_currency" disabled style="opacity:.6;cursor:not-allowed;">
-                    <option value="">Bloqueado en Plan Básico (Máximo 1 moneda)</option>
+                    <option value="">Bloqueado en Plan {{ $authUser?->currentTierLabel() ?? 'Básico' }} (Exclusivo Plan Corporativo PRO)</option>
                 </select>
             @endif
         </div>
@@ -164,11 +164,11 @@
     </div>
 </form>
 
-@if ($authUser?->isPremium() && $authUser->canCreateCompany())
+@if (($authUser?->maxCompanies() ?? 1) > 1 && $authUser->canCreateCompany())
 <div id="newCompanyModal" class="modal-backdrop" aria-hidden="true">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Crear segunda empresa (Plan Premium)</h3>
+            <h3>Crear segunda empresa (Plan {{ $authUser->currentTierLabel() }})</h3>
             <button class="icon-button" type="button" data-close-modal aria-label="Cerrar">×</button>
         </div>
         <form method="post" action="{{ route('company.store') }}">

@@ -24,6 +24,7 @@
 .sm-tabs {display: inline-flex; padding: 4px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); gap: 6px; margin-bottom: 16px;}
 .sm-tab {border: 0; border-radius: 9px; padding: 8px 16px; font: inherit; font-size: 13px; font-weight: 800; color: var(--muted); background: transparent; cursor: pointer; transition: all .2s ease;}
 .sm-tab.is-active {background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #111827;}
+.sm-tab-standard.is-active {background: linear-gradient(135deg, #0ea5e9, #10b981); color: #fff;}
 .sm-tab-premium.is-active {background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;}
 .sm-plans-grid {display: none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;}
 .sm-plans-grid.is-active {display: grid;}
@@ -35,6 +36,7 @@
 .sm-badge-ok {background: rgba(34, 197, 94, .15); color: #86efac; border: 1px solid rgba(34, 197, 94, .3);}
 .sm-badge-warn {background: rgba(245, 158, 11, .15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, .3);}
 .sm-badge-bad {background: rgba(239, 68, 68, .15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, .3);}
+.sm-badge-std {background: rgba(14, 165, 233, .18); color: #7dd3fc; border: 1px solid rgba(14, 165, 233, .35);}
 .sm-badge-info {background: rgba(99, 102, 241, .18); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, .35);}
 .sm-alert {border-radius: 12px; padding: 14px 18px; font-size: 14px; font-weight: 600; margin-bottom: 18px; background: rgba(34, 197, 94, .12); border: 1px solid rgba(34, 197, 94, .35); color: #86efac;}
 </style>
@@ -97,12 +99,13 @@
 <div class="sm-box">
     <div class="sm-header-row" style="margin-bottom:8px;">
         <div>
-            <h2 class="sm-h2">Planes de Membresía (Básico y Premium)</h2>
+            <h2 class="sm-h2">Planes de Membresía (Básico, Stándar y Corporativo)</h2>
             <p class="sm-sub" style="margin-bottom:0;">Ajusta los precios en dólares (USD) de cada plan por pestaña.</p>
         </div>
         <div class="sm-tabs" style="margin-bottom:0;">
             <button type="button" class="sm-tab is-active" id="sa-tab-basic" onclick="switchAdminPlanTab('basic')">Plan Básico</button>
-            <button type="button" class="sm-tab sm-tab-premium" id="sa-tab-premium" onclick="switchAdminPlanTab('premium')">Plan Premium</button>
+            <button type="button" class="sm-tab sm-tab-standard" id="sa-tab-standard" onclick="switchAdminPlanTab('standard')">Plan Stándar</button>
+            <button type="button" class="sm-tab sm-tab-premium" id="sa-tab-premium" onclick="switchAdminPlanTab('premium')">Plan Corporativo</button>
         </div>
     </div>
 
@@ -129,14 +132,37 @@
         @endforeach
     </div>
 
+    <div class="sm-plans-grid" id="sa-grid-standard">
+        @foreach ($plans->where('tier', 'standard') as $plan)
+            <form class="sm-plan-card" method="post" action="{{ route('superadmin.subscriptions.plans.update', $plan) }}">
+                @csrf
+                @method('PUT')
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:#f8fafc;">Plan Stándar · {{ $plan->durationLabel() }}</strong>
+                    <span class="sm-badge sm-badge-std">Stándar</span>
+                </div>
+                <div class="sm-field">
+                    <label>Nombre del periodo</label>
+                    <input name="name" class="sm-input" value="{{ $plan->name }}" required>
+                </div>
+                <div class="sm-field">
+                    <label>Precio (USD)</label>
+                    <input name="price_usd" type="number" step="0.01" min="1" class="sm-input" value="{{ $plan->price_usd }}" required>
+                </div>
+                <input type="hidden" name="is_active" value="1">
+                <button type="submit" class="sm-btn-sec" style="width:100%;">Actualizar plan</button>
+            </form>
+        @endforeach
+    </div>
+
     <div class="sm-plans-grid" id="sa-grid-premium">
         @foreach ($plans->where('tier', 'premium') as $plan)
             <form class="sm-plan-card" method="post" action="{{ route('superadmin.subscriptions.plans.update', $plan) }}">
                 @csrf
                 @method('PUT')
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="color:#f8fafc;">Plan Premium · {{ $plan->durationLabel() }}</strong>
-                    <span class="sm-badge sm-badge-info">Premium</span>
+                    <strong style="color:#f8fafc;">Plan Corporativo · {{ $plan->durationLabel() }}</strong>
+                    <span class="sm-badge sm-badge-info">Corporativo PRO</span>
                 </div>
                 <div class="sm-field">
                     <label>Nombre del periodo</label>
@@ -155,7 +181,7 @@
 
 <div class="sm-box">
     <h2 class="sm-h2">Asignar plan de cortesía</h2>
-    <p class="sm-sub">Activa, cambia de nivel (Básico / Premium) o extiende manualmente la membresía de un usuario.</p>
+    <p class="sm-sub">Activa, cambia de nivel (Básico / Stándar / Corporativo) o extiende manualmente la membresía de un usuario.</p>
     <form class="sm-form" method="post" action="{{ route('superadmin.subscriptions.grant') }}">
         @csrf
         <div class="sm-field">
@@ -169,14 +195,19 @@
         <div class="sm-field">
             <label for="grant-plan">Plan y Nivel</label>
             <select id="grant-plan" name="membership_plan_id" class="sm-input" required>
-                <optgroup label="Plan Básico (1 empresa · Soles)">
+                <optgroup label="Plan Básico (Máx. 50 proformas/mes · 1 empresa)">
                     @foreach ($plans->where('tier', 'basic') as $plan)
                         <option value="{{ $plan->id }}">Plan Básico · {{ $plan->name }} ({{ $plan->durationLabel() }})</option>
                     @endforeach
                 </optgroup>
-                <optgroup label="Plan Premium (2 empresas · Multimoneda · Galería)">
+                <optgroup label="Plan Stándar (100 proformas/mes · 2 empresas · Productos hasta 20)">
+                    @foreach ($plans->where('tier', 'standard') as $plan)
+                        <option value="{{ $plan->id }}">Plan Stándar · {{ $plan->name }} ({{ $plan->durationLabel() }})</option>
+                    @endforeach
+                </optgroup>
+                <optgroup label="Plan Corporativo PRO (Ilimitadas · Multimoneda · Recibos y Guías)">
                     @foreach ($plans->where('tier', 'premium') as $plan)
-                        <option value="{{ $plan->id }}">Plan Premium · {{ $plan->name }} ({{ $plan->durationLabel() }})</option>
+                        <option value="{{ $plan->id }}">Plan Corporativo · {{ $plan->name }} ({{ $plan->durationLabel() }})</option>
                     @endforeach
                 </optgroup>
             </select>
@@ -202,7 +233,7 @@
                         <td class="sm-td"><strong style="color:#f8fafc;">{{ $tenant->name }}</strong></td>
                         <td class="sm-td">{{ $tenant->email }}</td>
                         <td class="sm-td">
-                            <span class="sm-badge {{ $tenant->isPremium() ? 'sm-badge-info' : 'sm-badge-warn' }}">
+                            <span class="sm-badge {{ $tenant->isPremium() ? 'sm-badge-info' : ($tenant->isStandard() ? 'sm-badge-std' : 'sm-badge-warn') }}">
                                 Plan {{ $tenant->currentTierLabel() }}
                             </span>
                         </td>
@@ -255,10 +286,9 @@
 
 <script>
 window.switchAdminPlanTab = function switchAdminPlanTab(tier) {
-    const isPremium = tier === 'premium';
-    document.getElementById('sa-tab-basic')?.classList.toggle('is-active', !isPremium);
-    document.getElementById('sa-tab-premium')?.classList.toggle('is-active', isPremium);
-    document.getElementById('sa-grid-basic')?.classList.toggle('is-active', !isPremium);
-    document.getElementById('sa-grid-premium')?.classList.toggle('is-active', isPremium);
+    ['basic', 'standard', 'premium'].forEach((t) => {
+        document.getElementById('sa-tab-' + t)?.classList.toggle('is-active', t === tier);
+        document.getElementById('sa-grid-' + t)?.classList.toggle('is-active', t === tier);
+    });
 };
 </script>

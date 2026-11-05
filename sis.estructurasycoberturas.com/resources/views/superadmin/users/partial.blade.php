@@ -14,6 +14,7 @@
 .saas-td {padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); color: #cbd5e1; vertical-align: middle;}
 .saas-badge {display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600;}
 .saas-badge-admin {background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4);}
+.saas-badge-standard {background: rgba(56, 189, 248, 0.16); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.35);}
 .saas-badge-tenant {background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.25);}
 .saas-badge-active {background: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3);}
 .saas-badge-inactive {background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3);}
@@ -163,7 +164,7 @@
                             @if($user->isSuperAdmin())
                                 <span style="color:var(--muted);">—</span>
                             @elseif($user->hasActiveMembership())
-                                <span class="saas-badge {{ $user->isPremium() ? 'saas-badge-admin' : 'saas-badge-tenant' }}" style="margin-right:4px;">{{ $user->currentTierLabel() }}</span>
+                                <span class="saas-badge {{ $user->isPremium() ? 'saas-badge-admin' : ($user->isStandard() ? 'saas-badge-standard' : 'saas-badge-tenant') }}" style="margin-right:4px;">{{ $user->currentTierLabel() }}</span>
                                 <span class="saas-badge {{ $user->membershipDaysLeft() <= 7 ? 'saas-badge-tenant' : 'saas-badge-active' }}">Vence {{ $user->membership_ends_at->format('d/m/Y') }}</span>
                             @else
                                 <span class="saas-badge saas-badge-inactive">Vencida ({{ $user->currentTierLabel() }})</span>

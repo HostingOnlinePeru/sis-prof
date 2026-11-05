@@ -38,6 +38,14 @@ class User extends Authenticatable implements FilamentUser
 
     public const PRO_MAX_PRODUCTS = 20;
 
+    public const BASIC_MAX_PROFORMAS_MONTH = 50;
+
+    public const STANDARD_MAX_PROFORMAS_MONTH = 100;
+
+    public const CORPORATE_MAX_RECEIPTS_MONTH = 50;
+
+    public const CORPORATE_MAX_DISPATCH_GUIDES_MONTH = 50;
+
     protected static function booted(): void
     {
         static::creating(function (User $user) {
@@ -87,23 +95,74 @@ class User extends Authenticatable implements FilamentUser
             && ! $this->subscriptions()->whereIn('status', ['paid', 'granted'])->exists();
     }
 
+    public function isBasic(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        return empty($this->membership_tier) || $this->membership_tier === 'basic';
+    }
+
+    public function isStandard(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        return $this->membership_tier === 'standard';
+    }
+
     public function isPremium(): bool
     {
         if ($this->isSuperAdmin()) {
             return true;
         }
 
-        return $this->membership_tier === 'premium';
+        return in_array($this->membership_tier, ['premium', 'corporate'], true);
+    }
+
+    public function isCorporate(): bool
+    {
+        return $this->isPremium();
     }
 
     public function currentTierLabel(): string
     {
-        return $this->isPremium() ? 'Premium' : 'Básico';
+        if ($this->isPremium()) {
+            return 'Corporativo';
+        }
+
+        if ($this->isStandard()) {
+            return 'Stándar';
+        }
+
+        return 'Básico';
+    }
+
+    public function maxProformasPerMonth(): ?int
+    {
+        if ($this->isSuperAdmin() || $this->isPremium()) {
+            return null;
+        }
+
+        if ($this->isStandard()) {
+            return self::STANDARD_MAX_PROFORMAS_MONTH;
+        }
+
+        return self::BASIC_MAX_PROFORMAS_MONTH;
+    }
+
+    public function canCreateProforma(int $currentMonthCount): bool
+    {
+        $max = $this->maxProformasPerMonth();
+
+        return $max === null || $currentMonthCount < $max;
     }
 
     public function maxCompanies(): int
     {
-        return $this->isPremium() ? 2 : 1;
+        return ($this->isPremium() || $this->isStandard()) ? 2 : 1;
     }
 
     public function canCreateCompany(): bool
@@ -123,7 +182,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canUseProductsModule(): bool
     {
-        return $this->isSuperAdmin() || $this->isPremium();
+        return $this->isSuperAdmin() || $this->isPremium() || $this->isStandard();
     }
 
     public function maxProducts(): int
@@ -134,6 +193,26 @@ class User extends Authenticatable implements FilamentUser
     public function canCreateProduct(int $currentCount): bool
     {
         return $this->canUseProductsModule() && $currentCount < self::PRO_MAX_PRODUCTS;
+    }
+
+    public function canIssueReceipts(): bool
+    {
+        return $this->isPremium();
+    }
+
+    public function maxReceiptsPerMonth(): int
+    {
+        return $this->canIssueReceipts() ? self::CORPORATE_MAX_RECEIPTS_MONTH : 0;
+    }
+
+    public function canGenerateDispatchGuides(): bool
+    {
+        return $this->isPremium();
+    }
+
+    public function maxDispatchGuidesPerMonth(): int
+    {
+        return $this->canGenerateDispatchGuides() ? self::CORPORATE_MAX_DISPATCH_GUIDES_MONTH : 0;
     }
 
     public function currentPlanName(): ?string

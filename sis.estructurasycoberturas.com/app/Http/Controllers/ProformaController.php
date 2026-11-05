@@ -38,6 +38,11 @@ class ProformaController extends Controller
             ->latest()
             ->get();
 
+        $monthlyProformas = Proforma::query()
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->count();
+
         return AppShell::render($request, [
             'activePage' => 'proformas',
             'subtitle' => 'Crea, edita y genera proformas con productos, impuestos y documentos adjuntos.',
@@ -47,6 +52,8 @@ class ProformaController extends Controller
             'totalCreated' => Proforma::query()->where('status', 'created')->count(),
             'totalProformas' => Proforma::query()->count(),
             'totalQuoted' => Proforma::query()->sum('total'),
+            'monthlyProformas' => $monthlyProformas,
+            'maxMonthlyProformas' => $request->user()?->maxProformasPerMonth(),
         ]);
     }
 
@@ -69,6 +76,19 @@ class ProformaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        $monthlyCount = Proforma::query()
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->count();
+
+        if ($user && ! $user->canCreateProforma($monthlyCount)) {
+            $max = $user->maxProformasPerMonth();
+            throw ValidationException::withMessages([
+                'proforma' => "Has alcanzado el límite de {$max} proformas por mes de tu Plan {$user->currentTierLabel()} ({$monthlyCount}/{$max}). Mejora tu plan en Membresía para emitir más proformas.",
+            ]);
+        }
+
         $validated = $this->validatedData($request);
 
         $proforma = Proforma::query()->create($validated['proforma']);

@@ -21,7 +21,7 @@ class DocumentRepositoryController extends Controller
     {
         if (! $request->user()?->canUsePhotoGallery()) {
             return redirect()->route('membership.index')
-                ->withErrors(['membership' => 'El módulo de Galería de Fotos está disponible únicamente en el Plan Premium.']);
+                ->withErrors(['membership' => 'El módulo de Galería de Fotos está disponible únicamente en el Plan Corporativo (PRO).']);
         }
 
         $currentFolderId = $request->integer('folder') ?: null;

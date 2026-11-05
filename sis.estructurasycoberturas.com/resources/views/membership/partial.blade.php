@@ -25,21 +25,25 @@
 .mb-days strong {display: block; font-size: 44px; line-height: 1; font-weight: 900; color: #f8fafc;}
 .mb-days small {color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase;}
 .mb-tabs-wrap {display: flex; flex-direction: column; align-items: center; gap: 12px;}
-.mb-tabs {display: inline-flex; padding: 6px; border-radius: 16px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); gap: 6px;}
-.mb-tab {border: 0; border-radius: 12px; padding: 12px 26px; font: inherit; font-size: 15px; font-weight: 800; color: var(--muted); background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all .2s ease;}
+.mb-tabs {display: inline-flex; flex-wrap: wrap; justify-content: center; padding: 6px; border-radius: 16px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); gap: 6px;}
+.mb-tab {border: 0; border-radius: 12px; padding: 12px 24px; font: inherit; font-size: 15px; font-weight: 800; color: var(--muted); background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all .2s ease;}
 .mb-tab:hover {color: #fff;}
 .mb-tab.is-active {background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #111827; box-shadow: 0 8px 20px rgba(245, 158, 11, .28);}
+.mb-tab-standard.is-active {background: linear-gradient(135deg, #0ea5e9, #10b981); color: #fff; box-shadow: 0 8px 22px rgba(14, 165, 233, .38);}
 .mb-tab-premium.is-active {background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; box-shadow: 0 8px 22px rgba(99, 102, 241, .38);}
 .mb-tab-badge {padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 900; text-transform: uppercase; background: rgba(255, 255, 255, .18); color: inherit;}
-.mb-tier-desc {font-size: 14px; color: #cbd5e1; margin: 0; text-align: center; max-width: 680px;}
+.mb-tier-desc {font-size: 14px; color: #cbd5e1; margin: 0; text-align: center; max-width: 740px;}
 .mb-plans {display: none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; align-items: stretch;}
 .mb-plans.is-active {display: grid; animation: mbFade .35s ease;}
 .mb-plan {position: relative; display: flex; flex-direction: column; gap: 14px; padding: 30px 24px 22px; border-radius: 20px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .02)); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;}
 .mb-plan:hover {transform: translateY(-6px); border-color: rgba(245, 158, 11, .5); box-shadow: 0 28px 60px rgba(0, 0, 0, .4);}
+.mb-plan.is-standard:hover {border-color: rgba(14, 165, 233, .6);}
 .mb-plan.is-premium:hover {border-color: rgba(139, 92, 246, .6);}
 .mb-plan.is-featured {border: 2px solid rgba(245, 158, 11, .75); background: radial-gradient(circle at 100% 0%, rgba(245, 158, 11, .22), transparent 60%), linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .025)); box-shadow: 0 24px 60px rgba(245, 158, 11, .18);}
+.mb-plan.is-standard.is-featured {border-color: rgba(14, 165, 233, .8); background: radial-gradient(circle at 100% 0%, rgba(14, 165, 233, .26), transparent 60%), linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .025)); box-shadow: 0 24px 60px rgba(14, 165, 233, .22);}
 .mb-plan.is-premium.is-featured {border-color: rgba(139, 92, 246, .8); background: radial-gradient(circle at 100% 0%, rgba(139, 92, 246, .28), transparent 60%), linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .025)); box-shadow: 0 24px 60px rgba(139, 92, 246, .22);}
 .mb-ribbon {position: absolute; top: -13px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 6px 14px; border-radius: 999px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #111; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; box-shadow: 0 8px 18px rgba(245, 158, 11, .35);}
+.mb-plan.is-standard .mb-ribbon {background: linear-gradient(135deg, #0ea5e9, #10b981); color: #fff; box-shadow: 0 8px 18px rgba(14, 165, 233, .4);}
 .mb-plan.is-premium .mb-ribbon {background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; box-shadow: 0 8px 18px rgba(139, 92, 246, .4);}
 .mb-plan-head {display: flex; align-items: center; justify-content: space-between; gap: 10px;}
 .mb-plan-name {font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #e2e8f0;}
@@ -50,16 +54,19 @@
 .mb-price strong {font-size: 52px; font-weight: 900; line-height: 1; letter-spacing: -.03em;}
 .mb-price span {font-size: 15px; color: var(--muted); font-weight: 700;}
 .mb-monthly {font-size: 14px; color: #fbbf24; font-weight: 800;}
+.mb-plan.is-standard .mb-monthly {color: #38bdf8;}
 .mb-plan.is-premium .mb-monthly {color: #c4b5fd;}
 .mb-daily {font-size: 12px; color: var(--muted);}
 .mb-features {list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; color: #e2e8f0; font-size: 14px;}
 .mb-features li {display: flex; gap: 10px; align-items: flex-start; line-height: 1.4;}
 .mb-features li::before {content: '✓'; flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(52, 211, 153, .15); color: #34d399; font-size: 12px; font-weight: 900;}
+.mb-plan.is-standard .mb-features li::before {background: rgba(14, 165, 233, .2); color: #38bdf8;}
 .mb-plan.is-premium .mb-features li::before {background: rgba(139, 92, 246, .2); color: #c4b5fd;}
 .mb-features li.is-disabled {color: rgba(154, 168, 183, .5);}
 .mb-features li.is-disabled::before {content: '✕'; background: rgba(100, 116, 139, .15); color: #64748b;}
 .mb-pay {margin-top: auto; width: 100%; min-height: 50px; border: 0; border-radius: 14px; cursor: pointer; font: inherit; font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #635bff 0%, #7a73ff 100%); box-shadow: 0 12px 26px -8px rgba(99, 91, 255, .6); display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;}
-.mb-plan.is-featured:not(.is-premium) .mb-pay {background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #111827; box-shadow: 0 12px 28px -8px rgba(245, 158, 11, .6);}
+.mb-plan.is-featured:not(.is-premium):not(.is-standard) .mb-pay {background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #111827; box-shadow: 0 12px 28px -8px rgba(245, 158, 11, .6);}
+.mb-plan.is-standard.is-featured .mb-pay {background: linear-gradient(135deg, #0ea5e9, #10b981); box-shadow: 0 12px 28px -8px rgba(14, 165, 233, .65);}
 .mb-plan.is-premium.is-featured .mb-pay {background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 12px 28px -8px rgba(139, 92, 246, .7);}
 .mb-pay:hover {transform: translateY(-2px); box-shadow: 0 16px 32px -8px rgba(99, 91, 255, .75);}
 .mb-pay:disabled {opacity: .5; cursor: not-allowed; transform: none;}
@@ -80,6 +87,8 @@
 .mb-table th {text-align: left; padding: 10px 12px; font-size: 12px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line);}
 .mb-table td {padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, .06); color: #cbd5e1;}
 .mb-compare th:not(:first-child), .mb-compare td:not(:first-child) {text-align: center;}
+.mb-compare th.is-std {color: #38bdf8;}
+.mb-compare td.is-std {background: rgba(14, 165, 233, .05);}
 .mb-compare th.is-pro {color: #c4b5fd;}
 .mb-compare td.is-pro {background: rgba(139, 92, 246, .06);}
 .mb-yes {color: #34d399; font-weight: 900;}
@@ -107,15 +116,17 @@
     $daysLeft = $user->membershipDaysLeft();
     $onTrial = $user->isOnTrial();
     $planName = $user->currentPlanName();
-    $defaultTab = $user->isPremium() ? 'premium' : 'basic';
+    $defaultTab = $user->isPremium() ? 'premium' : ($user->isStandard() ? 'standard' : 'basic');
     $totalDays = $onTrial ? \App\Models\User::TRIAL_DAYS : 365;
     $percent = $active ? min(100, max(4, round($daysLeft / max(1, $totalDays) * 100))) : 0;
     $basicPlans = $plans->where('tier', 'basic');
+    $standardPlans = $plans->where('tier', 'standard');
     $premiumPlans = $plans->where('tier', 'premium');
     $fmt = fn ($v) => rtrim(rtrim(number_format($v, 2), '0'), '.');
     $months = fn ($p) => max(1, (int) round($p->price_usd / max(0.01, $p->monthlyPrice())));
     $maxMonthly = fn ($set) => $set->max(fn ($p) => $p->monthlyPrice()) ?: 0;
     $basicMax = $maxMonthly($basicPlans);
+    $standardMax = $maxMonthly($standardPlans);
     $premiumMax = $maxMonthly($premiumPlans);
     $savePct = fn ($p, $max) => $max > 0 ? (int) round((1 - $p->monthlyPrice() / $max) * 100) : 0;
     $lockIcon = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -169,9 +180,9 @@
     <section class="mb-hero" id="membership-hero">
         <span class="mb-hero-eyebrow"><i></i> Planes SISPROF</span>
         <h2>Cotiza como un profesional y <em>cierra más ventas</em> desde hoy</h2>
-        <p>Proformas impecables en segundos, enviadas por correo o PDF con tu marca. Elige el plan que impulsa tu negocio, por menos de lo que cuesta un café al mes.</p>
+        <p>Proformas impecables en segundos, enviadas por correo o PDF con tu marca. Elige el plan que impulsa tu negocio: Básico, Stándar o Corporativo PRO.</p>
         <div class="mb-hero-stats">
-            <div>{!! $checkIcon !!} Proformas ilimitadas</div>
+            <div>{!! $checkIcon !!} Planes a tu medida</div>
             <div>{!! $checkIcon !!} Activación inmediata</div>
             <div>{!! $checkIcon !!} Sin contratos ni renovación automática</div>
         </div>
@@ -182,13 +193,23 @@
             <button type="button" class="mb-tab {{ $defaultTab === 'basic' ? 'is-active' : '' }}" id="tab-btn-basic" onclick="switchMembershipTab('basic')" role="tab" aria-selected="{{ $defaultTab === 'basic' ? 'true' : 'false' }}">
                 <span>Plan Básico</span>
             </button>
+            <button type="button" class="mb-tab mb-tab-standard {{ $defaultTab === 'standard' ? 'is-active' : '' }}" id="tab-btn-standard" onclick="switchMembershipTab('standard')" role="tab" aria-selected="{{ $defaultTab === 'standard' ? 'true' : 'false' }}">
+                <span>Plan Stándar</span>
+                <span class="mb-tab-badge">PLUS</span>
+            </button>
             <button type="button" class="mb-tab mb-tab-premium {{ $defaultTab === 'premium' ? 'is-active' : '' }}" id="tab-btn-premium" onclick="switchMembershipTab('premium')" role="tab" aria-selected="{{ $defaultTab === 'premium' ? 'true' : 'false' }}">
-                <span>Plan Premium</span>
+                <span>Plan Corporativo</span>
                 <span class="mb-tab-badge">PRO</span>
             </button>
         </div>
         <p class="mb-tier-desc" id="mb-tier-hint">
-            {{ $defaultTab === 'premium' ? 'Plan Premium: Hasta 2 empresas, hasta 2 monedas de LATAM/USD, Módulo de Productos (máx. 20) y Galería de Fotos.' : 'Plan Básico: Ideal para 1 empresa con 1 moneda a elección (cualquier país de LATAM) y proformas ilimitadas.' }}
+            @if ($defaultTab === 'premium')
+                Plan Corporativo PRO: Proformas ilimitadas, hasta 2 empresas, 2 monedas (Multimoneda), Productos (hasta 20), Galería de Fotos, Emisión de Recibos (hasta 50/mes) y Guías de Remisión (hasta 50/mes).
+            @elseif ($defaultTab === 'standard')
+                Plan Stándar: Hasta 100 proformas/mes, puedes crear hasta 2 empresas y usar el Módulo de Productos (hasta 20).
+            @else
+                Plan Básico: Ideal para 1 empresa con 1 moneda a elección (cualquier país de LATAM / USD) y máximo 50 proformas/mes.
+            @endif
         </p>
     </div>
 
@@ -201,7 +222,7 @@
                 @endif
                 <div class="mb-plan-head">
                     <div>
-                        <div class="mb-plan-name">Básico · {{ $plan->name }}</div>
+                        <div class="mb-plan-name">Plan Básico · {{ $plan->name }}</div>
                         <div class="mb-plan-dur">{{ $plan->durationLabel() }}</div>
                     </div>
                     @if ($pct > 0)
@@ -214,14 +235,17 @@
                     <div class="mb-daily">Menos de ${{ number_format(ceil($plan->price_usd / ($m * 30) * 100) / 100, 2) }} al día · pago único</div>
                 </div>
                 <ul class="mb-features">
+                    <li><span><strong>Máximo 50 proformas/mes</strong></span></li>
                     <li>1 Empresa registrada</li>
                     <li>1 Moneda a elección (Todo LATAM / USD)</li>
-                    <li>Proformas y clientes ilimitados</li>
+                    <li>Clientes ilimitados</li>
                     <li>Envío por correo y exportación PDF</li>
-                    <li class="is-disabled">Módulo de Productos</li>
+                    <li class="is-disabled">Multi-empresa (hasta 2 empresas)</li>
+                    <li class="is-disabled">Módulo de Productos (hasta 20)</li>
                     <li class="is-disabled">Multimoneda (2da moneda)</li>
                     <li class="is-disabled">Galería de Fotos en Proformas</li>
-                    <li class="is-disabled">Multi-empresa (2 empresas)</li>
+                    <li class="is-disabled">Emisión de Recibos (Hasta 50/mes)</li>
+                    <li class="is-disabled">Generación de Guías de Remisión (Hasta 50/mes)</li>
                 </ul>
                 <form method="post" action="{{ route('membership.checkout', $plan) }}">
                     @csrf
@@ -234,16 +258,16 @@
         @endforeach
     </section>
 
-    <section class="mb-plans {{ $defaultTab === 'premium' ? 'is-active' : '' }}" id="tab-panel-premium" aria-label="Planes Premium">
-        @foreach ($premiumPlans as $plan)
-            @php $pct = $savePct($plan, $premiumMax); $m = $months($plan); @endphp
-            <article class="mb-plan is-premium {{ $plan->is_featured ? 'is-featured' : '' }}" id="plan-{{ $plan->slug }}">
+    <section class="mb-plans {{ $defaultTab === 'standard' ? 'is-active' : '' }}" id="tab-panel-standard" aria-label="Planes Stándar">
+        @foreach ($standardPlans as $plan)
+            @php $pct = $savePct($plan, $standardMax); $m = $months($plan); @endphp
+            <article class="mb-plan is-standard {{ $plan->is_featured ? 'is-featured' : '' }}" id="plan-{{ $plan->slug }}">
                 @if ($plan->is_featured)
-                    <span class="mb-ribbon">★ Más popular</span>
+                    <span class="mb-ribbon">★ Recomendado</span>
                 @endif
                 <div class="mb-plan-head">
                     <div>
-                        <div class="mb-plan-name">Premium · {{ $plan->name }}</div>
+                        <div class="mb-plan-name">Plan Stándar · {{ $plan->name }}</div>
                         <div class="mb-plan-dur">{{ $plan->durationLabel() }}</div>
                     </div>
                     @if ($pct > 0)
@@ -256,17 +280,63 @@
                     <div class="mb-daily">Menos de ${{ number_format(ceil($plan->price_usd / ($m * 30) * 100) / 100, 2) }} al día · pago único</div>
                 </div>
                 <ul class="mb-features">
-                    <li><span><strong>Hasta 2 Empresas</strong> (Multi-empresa)</span></li>
-                    <li><span><strong>Multimoneda PRO</strong> (2 monedas LATAM / USD)</span></li>
-                    <li><span><strong>Módulo de Productos</strong> (hasta 20)</span></li>
-                    <li><span><strong>Galería de Fotos</strong> en tus Proformas</span></li>
-                    <li>Proformas y clientes ilimitados</li>
+                    <li><span><strong>100 proformas/mes</strong></span></li>
+                    <li><span><strong>Puedes crear hasta 2 empresas</strong></span></li>
+                    <li><span><strong>Módulo de Productos hasta 20</strong></span></li>
+                    <li>1 Moneda a elección (Todo LATAM / USD)</li>
+                    <li>Clientes ilimitados</li>
                     <li>Envío por correo y exportación PDF</li>
+                    <li class="is-disabled">Multimoneda (2da moneda)</li>
+                    <li class="is-disabled">Galería de Fotos en Proformas</li>
+                    <li class="is-disabled">Emisión de Recibos (Hasta 50/mes)</li>
+                    <li class="is-disabled">Generación de Guías de Remisión (Hasta 50/mes)</li>
                 </ul>
                 <form method="post" action="{{ route('membership.checkout', $plan) }}">
                     @csrf
                     <button class="mb-pay" type="submit" id="pay-{{ $plan->slug }}" @disabled(! $stripeReady)>
-                        {!! $cardIcon !!} Elegir Premium {{ $plan->name }}
+                        {!! $cardIcon !!} Elegir Stándar {{ $plan->name }}
+                    </button>
+                </form>
+                <div class="mb-secure">{!! $lockIcon !!} Pago seguro con tarjeta vía Stripe</div>
+            </article>
+        @endforeach
+    </section>
+
+    <section class="mb-plans {{ $defaultTab === 'premium' ? 'is-active' : '' }}" id="tab-panel-premium" aria-label="Planes Corporativos">
+        @foreach ($premiumPlans as $plan)
+            @php $pct = $savePct($plan, $premiumMax); $m = $months($plan); @endphp
+            <article class="mb-plan is-premium {{ $plan->is_featured ? 'is-featured' : '' }}" id="plan-{{ $plan->slug }}">
+                @if ($plan->is_featured)
+                    <span class="mb-ribbon">★ Más popular · PRO</span>
+                @endif
+                <div class="mb-plan-head">
+                    <div>
+                        <div class="mb-plan-name">Plan Corporativo · {{ $plan->name }}</div>
+                        <div class="mb-plan-dur">{{ $plan->durationLabel() }}</div>
+                    </div>
+                    @if ($pct > 0)
+                        <span class="mb-save">Ahorra {{ $pct }}%</span>
+                    @endif
+                </div>
+                <div class="mb-price-row">
+                    <div class="mb-price"><strong>${{ $fmt($plan->price_usd) }}</strong><span>USD</span></div>
+                    <div class="mb-monthly">Solo ${{ number_format($plan->monthlyPrice(), 2) }} / mes</div>
+                    <div class="mb-daily">Menos de ${{ number_format(ceil($plan->price_usd / ($m * 30) * 100) / 100, 2) }} al día · pago único</div>
+                </div>
+                <ul class="mb-features">
+                    <li><span><strong>Ilimitadas proformas</strong></span></li>
+                    <li><span><strong>Hasta 2 Empresas</strong> (Multi-empresa)</span></li>
+                    <li><span><strong>Módulo de Productos</strong> (hasta 20)</span></li>
+                    <li><span><strong>Multimoneda PRO</strong> (2 monedas LATAM / USD)</span></li>
+                    <li><span><strong>Galería de Fotos</strong> en tus Proformas</span></li>
+                    <li><span><strong>Emisión de Recibos</strong> (Hasta 50/mes)</span></li>
+                    <li><span><strong>Generación de Guías de Remisión</strong> (Hasta 50/mes)</span></li>
+                    <li>Clientes ilimitados, correo y exportación PDF</li>
+                </ul>
+                <form method="post" action="{{ route('membership.checkout', $plan) }}">
+                    @csrf
+                    <button class="mb-pay" type="submit" id="pay-{{ $plan->slug }}" @disabled(! $stripeReady)>
+                        {!! $cardIcon !!} Elegir Corporativo {{ $plan->name }}
                     </button>
                 </form>
                 <div class="mb-secure">{!! $lockIcon !!} Pago seguro con tarjeta vía Stripe</div>
@@ -276,10 +346,10 @@
 
     <div class="mb-upsell" id="mb-upsell" @if ($defaultTab === 'premium') hidden @endif>
         <div>
-            <strong>🚀 ¿Vendes productos o manejas 2 empresas?</strong>
-            <span>Con Premium sumas catálogo de productos, fotos en tus proformas y multimoneda. Impresiona a tus clientes.</span>
+            <strong>🚀 ¿Necesitas proformas ilimitadas, recibos y guías de remisión?</strong>
+            <span>Con el Plan Corporativo PRO sumas proformas ilimitadas, multimoneda, galería de fotos, emisión de recibos (50/mes) y guías de remisión (50/mes).</span>
         </div>
-        <button type="button" id="mb-upsell-btn" onclick="switchMembershipTab('premium')">Ver planes PRO →</button>
+        <button type="button" id="mb-upsell-btn" onclick="switchMembershipTab('premium')">Ver Plan Corporativo PRO →</button>
     </div>
 
     <p class="mb-note">Si renuevas antes de que venza tu membresía, los meses se suman a tu fecha de vencimiento actual.</p>
@@ -308,15 +378,68 @@
         <div style="overflow-x: auto;">
             <table class="mb-table mb-compare">
                 <thead>
-                    <tr><th>Característica</th><th>Básico</th><th class="is-pro">Premium PRO</th></tr>
+                    <tr>
+                        <th>Característica</th>
+                        <th>Plan Básico</th>
+                        <th class="is-std">Plan Stándar</th>
+                        <th class="is-pro">Plan Corporativo PRO</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    <tr><td>Proformas y clientes</td><td>Ilimitados</td><td class="is-pro">Ilimitados</td></tr>
-                    <tr><td>Envío por correo y PDF</td><td class="mb-yes">✓</td><td class="is-pro mb-yes">✓</td></tr>
-                    <tr><td>Empresas</td><td>1</td><td class="is-pro"><strong>2</strong></td></tr>
-                    <tr><td>Monedas simultáneas</td><td>1</td><td class="is-pro"><strong>2</strong></td></tr>
-                    <tr><td>Módulo de Productos</td><td class="mb-no">✕</td><td class="is-pro"><strong>Hasta 20</strong></td></tr>
-                    <tr><td>Galería de Fotos en Proformas</td><td class="mb-no">✕</td><td class="is-pro mb-yes">✓</td></tr>
+                    <tr>
+                        <td>Proformas por mes</td>
+                        <td><strong>Máx. 50 / mes</strong></td>
+                        <td class="is-std"><strong>100 / mes</strong></td>
+                        <td class="is-pro"><strong>Ilimitadas</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Clientes</td>
+                        <td>Ilimitados</td>
+                        <td class="is-std">Ilimitados</td>
+                        <td class="is-pro">Ilimitados</td>
+                    </tr>
+                    <tr>
+                        <td>Envío por correo y PDF</td>
+                        <td class="mb-yes">✓</td>
+                        <td class="is-std mb-yes">✓</td>
+                        <td class="is-pro mb-yes">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Empresas registradas</td>
+                        <td>1</td>
+                        <td class="is-std"><strong>Hasta 2</strong></td>
+                        <td class="is-pro"><strong>Hasta 2</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Módulo de Productos</td>
+                        <td class="mb-no">✕</td>
+                        <td class="is-std"><strong>Hasta 20</strong></td>
+                        <td class="is-pro"><strong>Hasta 20</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Monedas simultáneas</td>
+                        <td>1</td>
+                        <td class="is-std">1</td>
+                        <td class="is-pro"><strong>2 (Multimoneda)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Galería de Fotos en Proformas</td>
+                        <td class="mb-no">✕</td>
+                        <td class="is-std mb-no">✕</td>
+                        <td class="is-pro mb-yes">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Emisión de Recibos</td>
+                        <td class="mb-no">✕</td>
+                        <td class="is-std mb-no">✕</td>
+                        <td class="is-pro"><strong>Hasta 50 / mes</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Generación de Guías de Remisión</td>
+                        <td class="mb-no">✕</td>
+                        <td class="is-std mb-no">✕</td>
+                        <td class="is-pro"><strong>Hasta 50 / mes</strong></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -326,7 +449,7 @@
         <h3>Preguntas frecuentes</h3>
         <div class="mb-faq">
             <details><summary>¿Se renueva automáticamente?</summary><p>No. Es un pago único por el periodo elegido. Te avisaremos antes del vencimiento para que renueves si lo deseas.</p></details>
-            <details><summary>¿Puedo pasar de Básico a Premium?</summary><p>Sí. Puedes adquirir un plan Premium en cualquier momento y desbloquear al instante productos, galería, multimoneda y multi-empresa.</p></details>
+            <details><summary>¿Puedo subir de Básico a Stándar o Corporativo?</summary><p>Sí. Puedes adquirir un Plan Stándar o Plan Corporativo PRO en cualquier momento y desbloquear de inmediato sus beneficios.</p></details>
             <details><summary>¿Qué pasa con mis datos si vence mi plan?</summary><p>Tus proformas, clientes y configuración se conservan de forma segura. Al renovar, todo vuelve a estar disponible.</p></details>
             <details><summary>¿Qué medios de pago aceptan?</summary><p>Tarjetas de crédito y débito Visa, Mastercard y American Express a través de Stripe.</p></details>
         </div>
@@ -360,32 +483,36 @@
 
 <script>
 window.switchMembershipTab = function switchMembershipTab(tier) {
-    const isPremium = tier === 'premium';
-    const btnBasic = document.getElementById('tab-btn-basic');
-    const btnPremium = document.getElementById('tab-btn-premium');
-    const panelBasic = document.getElementById('tab-panel-basic');
-    const panelPremium = document.getElementById('tab-panel-premium');
+    const tiers = ['basic', 'standard', 'premium'];
+    const hints = {
+        basic: 'Plan Básico: Ideal para 1 empresa con 1 moneda a elección (cualquier país de LATAM / USD) y máximo 50 proformas/mes.',
+        standard: 'Plan Stándar: Hasta 100 proformas/mes, puedes crear hasta 2 empresas y usar el Módulo de Productos (hasta 20).',
+        premium: 'Plan Corporativo PRO: Proformas ilimitadas, hasta 2 empresas, 2 monedas (Multimoneda), Productos (hasta 20), Galería de Fotos, Emisión de Recibos (hasta 50/mes) y Guías de Remisión (hasta 50/mes).',
+    };
+
+    tiers.forEach((t) => {
+        const active = t === tier;
+        const btn = document.getElementById('tab-btn-' + t);
+        const panel = document.getElementById('tab-panel-' + t);
+        if (btn) {
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', String(active));
+        }
+        if (panel) {
+            panel.classList.toggle('is-active', active);
+        }
+    });
+
     const hint = document.getElementById('mb-tier-hint');
     const upsell = document.getElementById('mb-upsell');
+    if (upsell) upsell.hidden = tier === 'premium';
+    if (hint && hints[tier]) {
+        hint.textContent = hints[tier];
+    }
 
-    if (btnBasic) {
-        btnBasic.classList.toggle('is-active', !isPremium);
-        btnBasic.setAttribute('aria-selected', String(!isPremium));
-    }
-    if (btnPremium) {
-        btnPremium.classList.toggle('is-active', isPremium);
-        btnPremium.setAttribute('aria-selected', String(isPremium));
-    }
-    if (panelBasic) panelBasic.classList.toggle('is-active', !isPremium);
-    if (panelPremium) panelPremium.classList.toggle('is-active', isPremium);
-    if (upsell) upsell.hidden = isPremium;
-    if (hint) {
-        hint.textContent = isPremium
-            ? 'Plan Premium: Hasta 2 empresas, hasta 2 monedas de LATAM/USD, Módulo de Productos (máx. 20) y Galería de Fotos.'
-            : 'Plan Básico: Ideal para 1 empresa con 1 moneda a elección (cualquier país de LATAM) y proformas ilimitadas.';
-    }
-    if (isPremium && panelPremium && event && event.currentTarget && event.currentTarget.id === 'mb-upsell-btn') {
-        panelPremium.scrollIntoView({behavior: 'smooth', block: 'start'});
+    const activePanel = document.getElementById('tab-panel-' + tier);
+    if (tier === 'premium' && activePanel && typeof event !== 'undefined' && event?.currentTarget?.id === 'mb-upsell-btn') {
+        activePanel.scrollIntoView({behavior: 'smooth', block: 'start'});
     }
 };
 </script>

@@ -14,12 +14,14 @@
 
 <section class="stats" aria-label="Resumen de proformas">
     <article class="stat">
-        <p class="label">Proformas</p>
-        <p class="value">{{ $totalProformas }}</p>
+        <p class="label">Proformas (Este mes)</p>
+        <p class="value">
+            {{ $monthlyProformas ?? $totalProformas }}@if (!empty($maxMonthlyProformas))<span style="font-size: 16px; color: var(--muted); font-weight: 700;"> / {{ $maxMonthlyProformas }}</span>@else<span style="font-size: 13px; color: #34d399; font-weight: 700; margin-left: 6px;">Ilimitadas</span>@endif
+        </p>
     </article>
     <article class="stat">
-        <p class="label">Creadas</p>
-        <p class="value">{{ $totalCreated }}</p>
+        <p class="label">Total acumuladas</p>
+        <p class="value">{{ $totalProformas }}</p>
     </article>
     <article class="stat">
         <p class="label">Total cotizado</p>

@@ -40,7 +40,13 @@ class Subscription extends Model
 
     public function tierLabel(): string
     {
-        return ($this->tier ?? $this->plan?->tier) === 'premium' ? 'Premium' : 'Básico';
+        $tier = $this->tier ?? $this->plan?->tier;
+
+        return match ($tier) {
+            'premium', 'corporate' => 'Corporativo',
+            'standard' => 'Stándar',
+            default => 'Básico',
+        };
     }
 
     public function statusLabel(): string
