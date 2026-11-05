@@ -23,6 +23,17 @@ class TermTemplate extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saving(function (TermTemplate $item): void {
+            if ($item->name && ! $item->title) {
+                $item->title = $item->name;
+            } elseif ($item->title && ! $item->name) {
+                $item->name = $item->title;
+            }
+        });
+    }
+
     public function company()
     {
         return $this->belongsTo(CompanySetting::class, 'company_id');

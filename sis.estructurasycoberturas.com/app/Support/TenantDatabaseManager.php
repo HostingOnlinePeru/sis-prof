@@ -97,9 +97,59 @@ class TenantDatabaseManager
             });
         }
 
-        if ($schema->hasTable('proforma_photos') && ! $schema->hasColumn('proforma_photos', 'path')) {
+        if ($schema->hasTable('proformas')) {
+            $schema->table('proformas', function (Blueprint $table) use ($schema) {
+                if (! $schema->hasColumn('proformas', 'number')) {
+                    $table->string('number')->nullable();
+                }
+                if (! $schema->hasColumn('proformas', 'proforma_number')) {
+                    $table->string('proforma_number')->nullable();
+                }
+                if (! $schema->hasColumn('proformas', 'valid_until')) {
+                    $table->date('valid_until')->nullable();
+                }
+                if (! $schema->hasColumn('proformas', 'expiration_date')) {
+                    $table->date('expiration_date')->nullable();
+                }
+                if (! $schema->hasColumn('proformas', 'template')) {
+                    $table->string('template')->default('commercial');
+                }
+                if (! $schema->hasColumn('proformas', 'currency')) {
+                    $table->string('currency')->default('PEN');
+                }
+                if (! $schema->hasColumn('proformas', 'subject')) {
+                    $table->string('subject')->nullable();
+                }
+                if (! $schema->hasColumn('proformas', 'discount_total')) {
+                    $table->decimal('discount_total', 12, 2)->default(0);
+                }
+                if (! $schema->hasColumn('proformas', 'tax_total')) {
+                    $table->decimal('tax_total', 12, 2)->default(0);
+                }
+                if (! $schema->hasColumn('proformas', 'sent_at')) {
+                    $table->timestamp('sent_at')->nullable();
+                }
+            });
+
+            try {
+                DB::connection('tenant')->statement("UPDATE proformas SET proforma_number = number WHERE (proforma_number IS NULL OR proforma_number = '') AND number IS NOT NULL");
+                DB::connection('tenant')->statement("UPDATE proformas SET number = proforma_number WHERE (number IS NULL OR number = '') AND proforma_number IS NOT NULL");
+                DB::connection('tenant')->statement("UPDATE proformas SET valid_until = expiration_date WHERE valid_until IS NULL AND expiration_date IS NOT NULL");
+                DB::connection('tenant')->statement("UPDATE proformas SET expiration_date = valid_until WHERE expiration_date IS NULL AND valid_until IS NOT NULL");
+                DB::connection('tenant')->statement("UPDATE proformas SET tax_total = tax WHERE (tax_total IS NULL OR tax_total = 0) AND tax IS NOT NULL AND tax > 0");
+            } catch (\Throwable $e) {
+                // Ignore query update errors
+            }
+        }
+
+        if ($schema->hasTable('proforma_photos')) {
             $schema->table('proforma_photos', function (Blueprint $table) use ($schema) {
-                $table->string('path')->nullable();
+                if (! $schema->hasColumn('proforma_photos', 'path')) {
+                    $table->string('path')->nullable();
+                }
+                if (! $schema->hasColumn('proforma_photos', 'photo_path')) {
+                    $table->string('photo_path')->nullable();
+                }
                 if (! $schema->hasColumn('proforma_photos', 'original_name')) {
                     $table->string('original_name')->nullable();
                 }
@@ -107,6 +157,13 @@ class TenantDatabaseManager
                     $table->unsignedInteger('sort')->default(0);
                 }
             });
+
+            try {
+                DB::connection('tenant')->statement("UPDATE proforma_photos SET photo_path = path WHERE (photo_path IS NULL OR photo_path = '') AND path IS NOT NULL");
+                DB::connection('tenant')->statement("UPDATE proforma_photos SET path = photo_path WHERE (path IS NULL OR path = '') AND photo_path IS NOT NULL");
+            } catch (\Throwable $e) {
+                // Ignore update errors
+            }
         }
 
         if ($schema->hasTable('proforma_items') && ! $schema->hasColumn('proforma_items', 'unit')) {

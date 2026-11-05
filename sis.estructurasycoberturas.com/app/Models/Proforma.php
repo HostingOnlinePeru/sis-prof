@@ -13,9 +13,11 @@ class Proforma extends Model
 
     protected $fillable = [
         'number',
+        'proforma_number',
         'client_id',
         'issue_date',
         'valid_until',
+        'expiration_date',
         'status',
         'template',
         'currency',
@@ -24,6 +26,7 @@ class Proforma extends Model
         'terms',
         'subtotal',
         'discount_total',
+        'tax',
         'tax_total',
         'total',
         'sent_at',
@@ -34,9 +37,11 @@ class Proforma extends Model
         return [
             'issue_date' => 'date',
             'valid_until' => 'date',
+            'expiration_date' => 'date',
             'sent_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'discount_total' => 'decimal:2',
+            'tax' => 'decimal:2',
             'tax_total' => 'decimal:2',
             'total' => 'decimal:2',
         ];
@@ -49,18 +54,58 @@ class Proforma extends Model
                 $proforma->status = 'created';
             }
 
-            if ($proforma->number) {
-                return;
+            $currentNumber = $proforma->number ?: $proforma->proforma_number;
+
+            if (! $currentNumber) {
+                $year = ($proforma->issue_date ?? now())->format('Y');
+                $prefix = "PF-{$year}-";
+
+                $allNumbers = static::withoutGlobalScopes()
+                    ->where(function ($q) use ($prefix) {
+                        $q->where('number', 'like', "{$prefix}%")
+                            ->orWhere('proforma_number', 'like', "{$prefix}%");
+                    })
+                    ->get(['number', 'proforma_number']);
+
+                $maxSeq = 0;
+                foreach ($allNumbers as $row) {
+                    $val = $row->number ?: $row->proforma_number;
+                    if (preg_match('/^PF-\d{4}-(\d+)$/', (string) $val, $m)) {
+                        $seq = (int) $m[1];
+                        if ($seq > $maxSeq) {
+                            $maxSeq = $seq;
+                        }
+                    }
+                }
+
+                $next = $maxSeq + 1;
+                $currentNumber = sprintf('PF-%s-%04d', $year, $next);
             }
 
-            $year = ($proforma->issue_date ?? now())->format('Y');
-            // The number remains globally unique even though the records are
-            // isolated by company; the database has a unique constraint on it.
-            $next = static::withoutGlobalScopes()
-                ->where('number', 'like', "PF-{$year}-%")
-                ->count() + 1;
+            $proforma->number = $currentNumber;
+            $proforma->proforma_number = $currentNumber;
 
-            $proforma->number = sprintf('PF-%s-%04d', $year, $next);
+            if ($proforma->valid_until && ! $proforma->expiration_date) {
+                $proforma->expiration_date = $proforma->valid_until;
+            } elseif ($proforma->expiration_date && ! $proforma->valid_until) {
+                $proforma->valid_until = $proforma->expiration_date;
+            }
+
+            if ($proforma->tax_total !== null && ! isset($proforma->attributes['tax'])) {
+                $proforma->tax = $proforma->tax_total;
+            }
+        });
+
+        static::updating(function (Proforma $proforma): void {
+            if ($proforma->number && ! $proforma->proforma_number) {
+                $proforma->proforma_number = $proforma->number;
+            } elseif ($proforma->proforma_number && ! $proforma->number) {
+                $proforma->number = $proforma->proforma_number;
+            }
+
+            if ($proforma->valid_until) {
+                $proforma->expiration_date = $proforma->valid_until;
+            }
         });
     }
 
@@ -94,13 +139,29 @@ class Proforma extends Model
         $items = $this->items()->get();
         $subtotal = round((float) $items->sum('subtotal'), 2);
         $taxTotal = round($subtotal * self::IGV_RATE, 2);
+        $total = round($subtotal + $taxTotal, 2);
 
-        $this->forceFill([
+        $attributes = [
             'subtotal' => $subtotal,
             'discount_total' => 0,
             'tax_total' => $taxTotal,
-            'total' => round($subtotal + $taxTotal, 2),
-        ])->saveQuietly();
+            'total' => $total,
+        ];
+
+        try {
+            $connection = $this->getConnection();
+            $schema = $connection->getSchemaBuilder();
+            if ($schema->hasColumn($this->getTable(), 'tax')) {
+                $attributes['tax'] = $taxTotal;
+            }
+            if ($schema->hasColumn($this->getTable(), 'proforma_number') && ! $this->proforma_number) {
+                $attributes['proforma_number'] = $this->number;
+            }
+        } catch (\Throwable $e) {
+            // Ignore schema check on failure
+        }
+
+        $this->forceFill($attributes)->saveQuietly();
     }
 
     public function whatsappUrl(): string

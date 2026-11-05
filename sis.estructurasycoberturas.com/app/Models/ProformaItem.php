@@ -43,6 +43,7 @@ class ProformaItem extends Model
             $subtotal = (float) $item->quantity * (float) $item->unit_price;
 
             $item->subtotal = round($subtotal, 2);
+            $item->total_price = round($subtotal, 2);
             $item->discount_rate = 0;
             $item->discount_amount = 0;
             $item->tax_rate = 0;

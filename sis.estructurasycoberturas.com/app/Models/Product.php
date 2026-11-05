@@ -29,6 +29,18 @@ class Product extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saving(function (Product $product): void {
+            if ($product->active !== null && ! isset($product->attributes['is_active'])) {
+                $product->is_active = $product->active;
+            }
+            if ($product->product_category_id && ! isset($product->attributes['category_id'])) {
+                $product->category_id = $product->product_category_id;
+            }
+        });
+    }
+
     public function proformaItems()
     {
         return $this->hasMany(ProformaItem::class);
