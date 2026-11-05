@@ -259,15 +259,54 @@ Route::post('/ingresar-local', function () {
     return redirect()->route('dashboard.local');
 })->name('login.local');
 
-Route::get('/storage/{path}', function ($path) {
-    $fullPath = storage_path('app/public/'.ltrim($path, '/'));
-    if (! file_exists($fullPath)) {
+Route::get('/media-publica', function (Request $request) {
+    $path = (string) $request->query('path', '');
+    if ($path === '' || str_contains($path, '..')) {
         abort(404);
     }
-    $mime = mime_content_type($fullPath);
-    if (str_ends_with(strtolower($path), '.svg')) {
-        $mime = 'image/svg+xml';
+
+    $fullPath = storage_path('app/public/'.ltrim(str_replace('\\', '/', $path), '/'));
+    if (! is_file($fullPath)) {
+        abort(404);
     }
+
+    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+    $mimeMap = [
+        'svg' => 'image/svg+xml',
+        'webp' => 'image/webp',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'pdf' => 'application/pdf',
+    ];
+    $mime = $mimeMap[$ext] ?? (function_exists('mime_content_type') ? (@mime_content_type($fullPath) ?: 'application/octet-stream') : 'application/octet-stream');
+
+    return response()->file($fullPath, [
+        'Content-Type' => $mime,
+        'Cache-Control' => 'public, max-age=31536000',
+    ]);
+})->name('media.public');
+
+Route::get('/storage/{path}', function ($path) {
+    if (str_contains((string) $path, '..')) {
+        abort(404);
+    }
+    $fullPath = storage_path('app/public/'.ltrim(str_replace('\\', '/', (string) $path), '/'));
+    if (! is_file($fullPath)) {
+        abort(404);
+    }
+    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+    $mimeMap = [
+        'svg' => 'image/svg+xml',
+        'webp' => 'image/webp',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'pdf' => 'application/pdf',
+    ];
+    $mime = $mimeMap[$ext] ?? (function_exists('mime_content_type') ? (@mime_content_type($fullPath) ?: 'application/octet-stream') : 'application/octet-stream');
 
     return response()->file($fullPath, ['Content-Type' => $mime]);
 })->where('path', '.*')->name('storage.local');

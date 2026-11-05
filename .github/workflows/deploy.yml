@@ -23,14 +23,14 @@ jobs:
               APP_DIR=$(dirname "$ARTISAN_FILE")
               if [ -d "$APP_DIR" ]; then
                 cd "$APP_DIR"
-                mkdir -p database/tenants storage/logs storage/framework/views storage/framework/cache storage/framework/sessions
+                mkdir -p database/tenants storage/logs storage/framework/views storage/framework/cache storage/framework/sessions storage/app/public/company/logos storage/app/public/proformas/photos storage/app/public/documents/repository public/storage
                 php artisan migrate --force || true
                 php artisan optimize:clear || true
                 php artisan view:clear || true
                 rm -f storage/framework/views/*.php || true
-                chmod -R a+rwX database storage bootstrap/cache 2>/dev/null || true
-                sudo chown -R www-data:www-data database storage bootstrap/cache 2>/dev/null || true
-                sudo chmod -R 775 database storage bootstrap/cache 2>/dev/null || true
+                chmod -R a+rwX database storage bootstrap/cache public/storage 2>/dev/null || true
+                sudo chown -R www-data:www-data database storage bootstrap/cache public/storage 2>/dev/null || true
+                sudo chmod -R 775 database storage bootstrap/cache public/storage 2>/dev/null || true
               fi
             done
             

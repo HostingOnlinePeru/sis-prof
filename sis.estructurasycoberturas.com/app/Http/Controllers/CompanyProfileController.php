@@ -105,17 +105,30 @@ class CompanyProfileController extends Controller
             $company = app(CompanyContext::class)->active() ?? new CompanySetting();
         }
 
+        if (! $company->user_id && $request->user()) {
+            $company->user_id = $request->user()->id;
+        }
+
+        $oldDashboardLogo = $company->dashboard_logo_path;
+        $oldProformaLogo = $company->proforma_logo_path;
+
         if ($request->hasFile('dashboard_logo')) {
             $file = $request->file('dashboard_logo');
             if ($file->isValid() && $file->getSize() > 0) {
-                if ($company->dashboard_logo_path && Storage::disk('public')->exists($company->dashboard_logo_path)) {
-                    Storage::disk('public')->delete($company->dashboard_logo_path);
-                }
                 $storedPath = $file->store('company/logos', 'public');
                 $data['dashboard_logo_path'] = $storedPath;
 
-                if (empty($company->proforma_logo_path) && ! isset($data['proforma_logo_path'])) {
+                if (empty($oldProformaLogo) || ($oldProformaLogo === $oldDashboardLogo && ! $request->hasFile('proforma_logo'))) {
                     $data['proforma_logo_path'] = $storedPath;
+                }
+
+                if ($oldDashboardLogo && $oldDashboardLogo !== ($data['proforma_logo_path'] ?? $oldProformaLogo)) {
+                    try {
+                        if (Storage::disk('public')->exists($oldDashboardLogo)) {
+                            Storage::disk('public')->delete($oldDashboardLogo);
+                        }
+                    } catch (\Throwable) {
+                    }
                 }
             }
         }
@@ -123,14 +136,21 @@ class CompanyProfileController extends Controller
         if ($request->hasFile('proforma_logo')) {
             $file = $request->file('proforma_logo');
             if ($file->isValid() && $file->getSize() > 0) {
-                if ($company->proforma_logo_path && Storage::disk('public')->exists($company->proforma_logo_path)) {
-                    Storage::disk('public')->delete($company->proforma_logo_path);
-                }
                 $storedPath = $file->store('company/logos', 'public');
                 $data['proforma_logo_path'] = $storedPath;
 
-                if (empty($company->dashboard_logo_path) && ! isset($data['dashboard_logo_path'])) {
+                if (empty($oldDashboardLogo) && ! isset($data['dashboard_logo_path'])) {
                     $data['dashboard_logo_path'] = $storedPath;
+                }
+
+                $currentDashboardLogo = $data['dashboard_logo_path'] ?? $oldDashboardLogo;
+                if ($oldProformaLogo && $oldProformaLogo !== $currentDashboardLogo) {
+                    try {
+                        if (Storage::disk('public')->exists($oldProformaLogo)) {
+                            Storage::disk('public')->delete($oldProformaLogo);
+                        }
+                    } catch (\Throwable) {
+                    }
                 }
             }
         }
@@ -138,6 +158,7 @@ class CompanyProfileController extends Controller
         $company->fill($data);
         $company->save();
 
+        \App\Support\TenantDatabaseManager::ensureDatabaseExists($company);
         app(CompanyContext::class)->switchTo($company);
 
         session()->flash('status', 'Datos de empresa guardados correctamente.');
@@ -204,25 +225,118 @@ class CompanyProfileController extends Controller
 
     public static function publicLogoUrl(?string $path): ?string
     {
-        if (! $path || str_contains($path, '..') || ! Storage::disk('public')->exists($path)) {
+        if (! $path || str_contains($path, '..')) {
             return null;
         }
 
-        $publicPath = str_replace('\\', '/', ltrim($path, '/'));
-        $source = storage_path('app/public/'.$publicPath);
-        $destination = public_path('storage/'.$publicPath);
+        try {
+            $publicPath = str_replace('\\', '/', ltrim($path, '/'));
+            $source = storage_path('app/public/'.$publicPath);
 
-        if (! File::exists($source) || filesize($source) === 0) {
+            if (! is_file($source) || @filesize($source) === 0) {
+                return null;
+            }
+
+            $destination = public_path('storage/'.$publicPath);
+
+            try {
+                if (@realpath($source) !== @realpath($destination)) {
+                    if (! is_file($destination) || @filemtime($source) > @filemtime($destination) || @filesize($destination) === 0) {
+                        $destDir = dirname($destination);
+                        if (is_dir($destDir) ? is_writable($destDir) : is_writable(public_path())) {
+                            File::ensureDirectoryExists($destDir);
+                            @copy($source, $destination);
+                        }
+                    }
+                }
+            } catch (\Throwable) {
+                // Ignore if public/storage is read-only in production; served via /media-publica
+            }
+
+            $version = @filemtime($source) ?: time();
+
+            return '/media-publica?path='.rawurlencode($publicPath).'&v='.$version;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public static function pdfImageDataUri(?string $path): ?string
+    {
+        if (! $path || str_contains($path, '..')) {
             return null;
         }
 
-        if (! File::exists($destination) || filemtime($source) > filemtime($destination) || filesize($destination) === 0) {
-            File::ensureDirectoryExists(dirname($destination));
-            File::copy($source, $destination);
+        try {
+            $publicPath = str_replace('\\', '/', ltrim($path, '/'));
+            $fullPath = storage_path('app/public/'.$publicPath);
+
+            if (! is_file($fullPath) || @filesize($fullPath) === 0) {
+                return null;
+            }
+
+            $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            if ($ext === 'svg') {
+                return 'data:image/svg+xml;base64,'.base64_encode((string) file_get_contents($fullPath));
+            }
+
+            $imageInfo = @getimagesize($fullPath);
+            $imageType = $imageInfo[2] ?? null;
+
+            $needsPngConversion = $ext === 'webp'
+                || $imageType === IMAGETYPE_WEBP
+                || $ext === 'gif'
+                || $imageType === IMAGETYPE_GIF
+                || $ext === 'bmp'
+                || $imageType === IMAGETYPE_BMP;
+
+            if ($needsPngConversion) {
+                $im = false;
+                if (($ext === 'webp' || $imageType === IMAGETYPE_WEBP) && function_exists('imagecreatefromwebp')) {
+                    $im = @imagecreatefromwebp($fullPath);
+                } elseif (function_exists('imagecreatefromstring')) {
+                    $im = @imagecreatefromstring((string) @file_get_contents($fullPath));
+                }
+
+                if ($im !== false && function_exists('imagepng')) {
+                    if (function_exists('imagepalettetotruecolor')) {
+                        @imagepalettetotruecolor($im);
+                    }
+                    @imagealphablending($im, true);
+                    @imagesavealpha($im, true);
+                    ob_start();
+                    @imagepng($im);
+                    $pngData = ob_get_clean();
+                    if ($pngData) {
+                        return 'data:image/png;base64,'.base64_encode($pngData);
+                    }
+                }
+
+                if (class_exists(\Imagick::class)) {
+                    $imagick = new \Imagick($fullPath);
+                    $imagick->setImageFormat('png');
+                    $pngData = $imagick->getImageBlob();
+                    $imagick->clear();
+                    if ($pngData) {
+                        return 'data:image/png;base64,'.base64_encode($pngData);
+                    }
+                }
+
+                return null;
+            }
+
+            $mime = $imageInfo['mime'] ?? (function_exists('mime_content_type') ? @mime_content_type($fullPath) : null);
+            if (! $mime) {
+                $mime = match ($ext) {
+                    'png' => 'image/png',
+                    'jpg', 'jpeg' => 'image/jpeg',
+                    default => 'image/png',
+                };
+            }
+
+            return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($fullPath));
+        } catch (\Throwable) {
+            return null;
         }
-
-        $version = filemtime($source);
-
-        return '/storage/'.$publicPath.'?v='.$version;
     }
 }

@@ -42,7 +42,7 @@
     </div>
 </section>
 
-<form class="panel" method="post" action="{{ route('company.update') }}" enctype="multipart/form-data">
+<form class="panel" method="post" action="{{ route('company.update') }}" enctype="multipart/form-data" data-ajax-form>
     @csrf
     @if ($company->id)
         <input type="hidden" name="company_id" value="{{ $company->id }}">

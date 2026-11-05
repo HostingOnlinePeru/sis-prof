@@ -267,17 +267,7 @@
 <body>
 @php
     $proformaLogo = $company?->proforma_logo_path ?: $company?->dashboard_logo_path ?: $company?->logo_path;
-    $logoDataUri = null;
-    if ($proformaLogo && \Illuminate\Support\Facades\Storage::disk('public')->exists($proformaLogo)) {
-        $fullLogoPath = storage_path('app/public/'.$proformaLogo);
-        if (file_exists($fullLogoPath)) {
-            $logoMime = mime_content_type($fullLogoPath);
-            if (str_ends_with(strtolower($proformaLogo), '.svg')) {
-                $logoMime = 'image/svg+xml';
-            }
-            $logoDataUri = 'data:'.$logoMime.';base64,'.base64_encode(file_get_contents($fullLogoPath));
-        }
-    }
+    $logoDataUri = \App\Http\Controllers\CompanyProfileController::pdfImageDataUri($proformaLogo);
     $currency = \App\Support\LatamCurrencies::symbol($proforma->currency);
     $currencyLabel = \App\Support\LatamCurrencies::shortOptionLabel($proforma->currency ?: 'PEN');
     $clientCompany = $proforma->client->company_name ?: $proforma->client->name;
@@ -375,17 +365,7 @@
             <div class="photos-grid">
                 @foreach ($proforma->photos->take(3) as $photo)
                     @php
-                        $photoDataUri = null;
-                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($photo->path)) {
-                            $fullPhotoPath = storage_path('app/public/'.$photo->path);
-                            if (file_exists($fullPhotoPath)) {
-                                $photoMime = mime_content_type($fullPhotoPath);
-                                if (str_ends_with(strtolower($photo->path), '.svg')) {
-                                    $photoMime = 'image/svg+xml';
-                                }
-                                $photoDataUri = 'data:'.$photoMime.';base64,'.base64_encode(file_get_contents($fullPhotoPath));
-                            }
-                        }
+                        $photoDataUri = \App\Http\Controllers\CompanyProfileController::pdfImageDataUri($photo->path);
                     @endphp
                     @if ($photoDataUri)
                         <div class="photo-cell"><img src="{{ $photoDataUri }}" alt="Foto de proforma"></div>
