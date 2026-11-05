@@ -118,6 +118,42 @@ class StripeGateway
         return $response->json();
     }
 
+    public static function createTemplateCheckoutSession(User $user, array $template, \App\Models\TemplatePurchase $purchase): array
+    {
+        $response = Http::withToken((string) self::secret())
+            ->asForm()
+            ->post(self::API.'/checkout/sessions', [
+                'mode' => 'payment',
+                'customer_email' => $user->email,
+                'client_reference_id' => 'template:'.$purchase->id,
+                'success_url' => route('templates.success').'?session_id={CHECKOUT_SESSION_ID}&purchase_id='.$purchase->id,
+                'cancel_url' => route('templates.index').'?cancelado=1',
+                'line_items' => [[
+                    'quantity' => 1,
+                    'price_data' => [
+                        'currency' => 'usd',
+                        'unit_amount' => (int) round(((float) ($template['price_usd'] ?? 5.00)) * 100),
+                        'product_data' => [
+                            'name' => 'Plantilla de Proforma: '.($template['name'] ?? 'Premium'),
+                            'description' => $template['description'] ?? 'Plantilla de cotización para SISPROF',
+                        ],
+                    ],
+                ]],
+                'metadata' => [
+                    'purchase_id' => $purchase->id,
+                    'user_id' => $user->id,
+                    'template_slug' => $template['slug'],
+                    'type' => 'template',
+                ],
+            ]);
+
+        if ($response->failed()) {
+            throw new RuntimeException($response->json('error.message') ?: 'No se pudo iniciar el pago con Stripe.');
+        }
+
+        return $response->json();
+    }
+
     public static function retrieveSession(string $sessionId): array
     {
         $response = Http::withToken((string) self::secret())

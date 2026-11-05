@@ -156,8 +156,36 @@
             <div class="field">
                 <label for="template">Modelo PDF</label>
                 <select id="template" name="template" required>
-                    <option value="commercial" @selected(old('template', $proforma->template) === 'commercial')>Modelo 1</option>
-                    <option value="technical" @selected(old('template', $proforma->template) === 'technical')>Modelo 2</option>
+                    @if (isset($templates) && $templates->isNotEmpty())
+                        <optgroup label="Modelos Gratuitos (Incluidos)">
+                            @foreach ($templates->filter(fn($t) => $t['is_free']) as $tpl)
+                                <option value="{{ $tpl['slug'] }}" @selected(old('template', $proforma->template) === $tpl['slug'])>
+                                    {{ $tpl['name'] }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                        @php
+                            $premiumTpls = $templates->filter(fn($t) => ! $t['is_free']);
+                        @endphp
+                        @if ($premiumTpls->isNotEmpty())
+                            <optgroup label="Modelos Premium">
+                                @foreach ($premiumTpls as $tpl)
+                                    @if ($tpl['is_unlocked'])
+                                        <option value="{{ $tpl['slug'] }}" @selected(old('template', $proforma->template) === $tpl['slug'])>
+                                            ⭐ {{ $tpl['name'] }}
+                                        </option>
+                                    @else
+                                        <option value="{{ $tpl['slug'] }}" disabled>
+                                            🔒 {{ $tpl['name'] }} ($5.00 USD - Bloqueada)
+                                        </option>
+                                    @endif
+                                @endforeach
+                            </optgroup>
+                        @endif
+                    @else
+                        <option value="commercial" @selected(old('template', $proforma->template) === 'commercial')>Modelo 1: Comercial Clásico</option>
+                        <option value="technical" @selected(old('template', $proforma->template) === 'technical')>Modelo 2: Técnico Estructurado</option>
+                    @endif
                 </select>
             </div>
 

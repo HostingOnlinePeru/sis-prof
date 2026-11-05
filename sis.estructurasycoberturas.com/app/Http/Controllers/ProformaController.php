@@ -271,6 +271,7 @@ class ProformaController extends Controller
             'galleryPhotos' => $canUseGallery
                 ? Document::query()->where('active', true)->where('mime_type', 'like', 'image/%')->latest()->get()
                 : collect(),
+            'templates' => \App\Support\TemplateCatalog::forUser($request->user()),
         ]);
     }
 
@@ -282,11 +283,13 @@ class ProformaController extends Controller
         $allowedCodes = array_keys($enabledCurrencies);
         $primaryCurrency = $company?->default_currency ?: 'PEN';
 
+        $allowedTemplates = \App\Support\TemplateCatalog::all()->keys()->all();
+
         $data = $request->validate([
             'client_id' => ['required', Rule::exists(Client::class, 'id')],
             'issue_date' => ['required', 'date'],
             'valid_until' => ['nullable', 'date'],
-            'template' => ['required', 'in:commercial,technical'],
+            'template' => ['required', Rule::in($allowedTemplates)],
             'currency' => ['nullable', Rule::in(LatamCurrencies::codes())],
             'subject' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:2000'],

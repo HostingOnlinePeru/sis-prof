@@ -13,9 +13,15 @@ class ProformaPdf
     {
         $proforma->loadMissing(['company', 'client', 'items.product', 'documents', 'photos']);
 
-        $view = $proforma->template === 'technical'
-            ? 'proformas.pdf-technical'
-            : 'proformas.pdf-commercial';
+        $templateSlug = $proforma->template ?: 'commercial';
+
+        if ($templateSlug === 'technical') {
+            $view = 'proformas.pdf-technical';
+        } elseif (view()->exists('proformas.templates.' . $templateSlug)) {
+            $view = 'proformas.templates.' . $templateSlug;
+        } else {
+            $view = 'proformas.pdf-commercial';
+        }
 
         return Pdf::loadView($view, [
             'company' => $company ?: $proforma->company,

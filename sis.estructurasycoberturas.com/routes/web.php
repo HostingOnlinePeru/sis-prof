@@ -12,6 +12,7 @@ use App\Http\Controllers\SuperAdminUserController;
 use App\Http\Controllers\CompanyOnboardingController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\SuperAdminSubscriptionController;
+use App\Http\Controllers\TemplateStoreController;
 use App\Http\Middleware\EnsureActiveMembership;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureUserHasCompany;
@@ -77,6 +78,12 @@ Route::middleware(['auth', EnsureUserIsActive::class, EnsureUserHasCompany::clas
     Route::get('/admin/membresia', [MembershipController::class, 'index'])->name('membership.index');
     Route::post('/admin/membresia/{plan:slug}/pagar', [MembershipController::class, 'checkout'])->name('membership.checkout');
     Route::get('/admin/membresia/pago-exitoso', [MembershipController::class, 'success'])->name('membership.success');
+
+    Route::get('/admin/plantillas', [TemplateStoreController::class, 'index'])->name('templates.index');
+    Route::get('/admin/plantillas/{slug}/vista-previa', [TemplateStoreController::class, 'preview'])->name('templates.preview');
+    Route::post('/admin/plantillas/{slug}/comprar', [TemplateStoreController::class, 'checkout'])->name('templates.checkout');
+    Route::get('/admin/plantillas/pago-exitoso', [TemplateStoreController::class, 'success'])->name('templates.success');
+    Route::post('/admin/plantillas/{slug}/predeterminada', [TemplateStoreController::class, 'setDefault'])->name('templates.set-default');
     Route::get('/admin', function () {
         return redirect()->route('dashboard.local');
     });

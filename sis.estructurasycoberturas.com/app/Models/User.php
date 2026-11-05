@@ -70,6 +70,41 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Subscription::class);
     }
 
+    public function templatePurchases()
+    {
+        return $this->hasMany(TemplatePurchase::class);
+    }
+
+    public function hasUnlockedTemplate(string $slug): bool
+    {
+        if (in_array($slug, ['commercial', 'technical'], true)) {
+            return true;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->templatePurchases()
+            ->where('template_slug', $slug)
+            ->where('status', 'completed')
+            ->exists();
+    }
+
+    public function unlockTemplate(string $slug, float $amount = 5.00, string $source = 'courtesy', ?string $stripeSessionId = null): TemplatePurchase
+    {
+        return $this->templatePurchases()->updateOrCreate(
+            ['template_slug' => $slug],
+            [
+                'amount_usd' => $amount,
+                'status' => 'completed',
+                'source' => $source,
+                'stripe_session_id' => $stripeSessionId,
+                'notes' => 'Plantilla desbloqueada para la cuenta',
+            ]
+        );
+    }
+
     public function hasActiveMembership(): bool
     {
         if ($this->isSuperAdmin()) {

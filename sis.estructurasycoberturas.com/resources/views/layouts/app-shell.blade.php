@@ -1088,6 +1088,15 @@
                     </span>
                     <span>Términos</span>
                 </a>
+                <a class="{{ $activePage === 'templates' ? 'active' : '' }}" href="{{ route('templates.index') }}" data-ajax-link data-nav="templates">
+                    <span class="app-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18M9 21V9"/>
+                        </svg>
+                    </span>
+                    <span>Plantillas</span>
+                </a>
                 <a class="{{ $activePage === 'company' ? 'active' : '' }}" href="{{ route('company.edit') }}" data-ajax-link data-nav="company">
                     <span class="app-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
