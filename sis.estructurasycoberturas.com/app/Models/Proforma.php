@@ -82,31 +82,51 @@ class Proforma extends Model
                 $currentNumber = sprintf('PF-%s-%04d', $year, $next);
             }
 
-            $proforma->number = $currentNumber;
-            $proforma->proforma_number = $currentNumber;
-
-            if ($proforma->valid_until && ! $proforma->expiration_date) {
-                $proforma->expiration_date = $proforma->valid_until;
-            } elseif ($proforma->expiration_date && ! $proforma->valid_until) {
-                $proforma->valid_until = $proforma->expiration_date;
+            if (static::hasTableColumn('number')) {
+                $proforma->number = $currentNumber;
+            }
+            if (static::hasTableColumn('proforma_number')) {
+                $proforma->proforma_number = $currentNumber;
             }
 
-            if ($proforma->tax_total !== null && ! isset($proforma->attributes['tax'])) {
+            if (static::hasTableColumn('expiration_date') && $proforma->valid_until) {
+                $proforma->expiration_date = $proforma->valid_until;
+            } elseif (static::hasTableColumn('valid_until') && ! $proforma->valid_until && isset($proforma->attributes['expiration_date'])) {
+                $proforma->valid_until = $proforma->attributes['expiration_date'];
+            }
+
+            if (static::hasTableColumn('tax') && $proforma->tax_total !== null) {
                 $proforma->tax = $proforma->tax_total;
             }
         });
 
         static::updating(function (Proforma $proforma): void {
-            if ($proforma->number && ! $proforma->proforma_number) {
+            if (static::hasTableColumn('proforma_number') && $proforma->number && ! $proforma->proforma_number) {
                 $proforma->proforma_number = $proforma->number;
-            } elseif ($proforma->proforma_number && ! $proforma->number) {
+            } elseif (static::hasTableColumn('number') && $proforma->proforma_number && ! $proforma->number) {
                 $proforma->number = $proforma->proforma_number;
             }
 
-            if ($proforma->valid_until) {
+            if (static::hasTableColumn('expiration_date') && $proforma->valid_until) {
                 $proforma->expiration_date = $proforma->valid_until;
             }
         });
+    }
+
+    public static function hasTableColumn(string $column): bool
+    {
+        static $columnCache = [];
+
+        try {
+            $connName = (new static)->getConnectionName() ?: 'tenant';
+            if (! isset($columnCache[$connName])) {
+                $columnCache[$connName] = (new static)->getConnection()->getSchemaBuilder()->getColumnListing('proformas');
+            }
+
+            return in_array($column, $columnCache[$connName], true);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function client()

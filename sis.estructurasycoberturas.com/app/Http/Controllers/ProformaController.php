@@ -109,6 +109,12 @@ class ProformaController extends Controller
                 'user_id' => $user?->id,
             ]);
 
+            if ($request->expectsJson() || $request->header('X-App-Partial') === '1') {
+                return response()->json([
+                    'errors' => ['proforma' => ['Hubo un inconveniente al guardar la proforma: '.$e->getMessage()]],
+                ], 422);
+            }
+
             return back()->withInput()->withErrors([
                 'proforma' => 'Hubo un inconveniente al guardar la proforma: '.$e->getMessage(),
             ]);
@@ -144,6 +150,12 @@ class ProformaController extends Controller
                 'proforma_id' => $proforma->id,
             ]);
 
+            if ($request->expectsJson() || $request->header('X-App-Partial') === '1') {
+                return response()->json([
+                    'errors' => ['proforma' => ['Hubo un inconveniente al actualizar la proforma: '.$e->getMessage()]],
+                ], 422);
+            }
+
             return back()->withInput()->withErrors([
                 'proforma' => 'Hubo un inconveniente al actualizar la proforma: '.$e->getMessage(),
             ]);
@@ -154,22 +166,66 @@ class ProformaController extends Controller
             ->with('status', 'Proforma actualizada correctamente.');
     }
 
-    public function destroy(Proforma $proforma): RedirectResponse
+    public function destroy(Request $request, Proforma $proforma): RedirectResponse|JsonResponse
     {
-        $proforma->delete();
+        try {
+            DB::connection('tenant')->transaction(function () use ($proforma) {
+                $proforma->items()->delete();
+                $proforma->photos()->delete();
+                $proforma->delete();
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error deleting proforma', [
+                'error' => $e->getMessage(),
+                'proforma_id' => $proforma->id,
+            ]);
+
+            if ($request->expectsJson() || $request->header('X-App-Partial') === '1') {
+                return response()->json([
+                    'errors' => ['proforma' => ['No se pudo eliminar la proforma: '.$e->getMessage()]],
+                ], 422);
+            }
+
+            return back()->withErrors(['proforma' => 'No se pudo eliminar la proforma: '.$e->getMessage()]);
+        }
+
+        if ($request->expectsJson() || $request->header('X-App-Partial') === '1') {
+            return $this->index($request);
+        }
 
         return redirect()
             ->route('proformas.index')
             ->with('status', 'Proforma eliminada correctamente.');
     }
 
-    public function updateStatus(Request $request, Proforma $proforma): RedirectResponse
+    public function updateStatus(Request $request, Proforma $proforma): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
-            'status' => ['required', 'in:accepted,cancelled'],
+            'status' => ['required', 'in:accepted,cancelled,created,sent'],
         ]);
 
-        $proforma->update(['status' => $data['status']]);
+        try {
+            DB::connection('tenant')->transaction(function () use ($proforma, $data) {
+                $proforma->update(['status' => $data['status']]);
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error updating proforma status', [
+                'error' => $e->getMessage(),
+                'proforma_id' => $proforma->id,
+            ]);
+
+            if ($request->expectsJson() || $request->header('X-App-Partial') === '1') {
+                return response()->json([
+                    'errors' => ['status' => ['No se pudo actualizar el estado: '.$e->getMessage()]],
+                ], 422);
+            }
+
+            return back()->withErrors(['proforma' => 'No se pudo actualizar el estado: '.$e->getMessage()]);
+        }
+
+        if ($request->expectsJson() || $request->header('X-App-Partial') === '1') {
+            return $this->index($request);
+        }
 
         return redirect()
             ->route('proformas.index')
