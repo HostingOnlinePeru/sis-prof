@@ -1929,12 +1929,25 @@
             }
 
             if (! response.ok) {
+                let errorText = null;
+                if ((response.headers.get('content-type') || '').includes('application/json')) {
+                    try {
+                        const errPayload = await response.json();
+                        if (errPayload.message) {
+                            errorText = errPayload.message;
+                        } else if (errPayload.errors) {
+                            const msgs = Object.values(errPayload.errors).flat();
+                            if (msgs.length) errorText = msgs.join('<br>');
+                        }
+                    } catch (e) {}
+                }
                 const messagesByStatus = {
+                    404: 'El registro solicitado no fue encontrado o ya fue eliminado.',
                     413: 'Las fotos o archivos superan el tamaño permitido por el servidor. Reduce el peso o sube menos archivos.',
                     419: 'La sesión venció. Recarga la página e intenta nuevamente.',
-                    500: 'No se pudo guardar la proforma por un error interno. Intenta otra vez o revisamos el detalle.',
+                    500: errorText || 'Ocurrió un inconveniente interno en el servidor. Intenta otra vez o revisa el registro.',
                 };
-                content.insertAdjacentHTML('afterbegin', `<div class="errors"><div>${messagesByStatus[response.status] || 'No se pudo guardar el formulario. Revisa los datos e intenta nuevamente.'}</div></div>`);
+                content.insertAdjacentHTML('afterbegin', `<div class="errors"><div>${errorText || messagesByStatus[response.status] || 'No se pudo procesar la solicitud. Revisa los datos e intenta nuevamente.'}</div></div>`);
                 content.classList.remove('loading');
                 return;
             }

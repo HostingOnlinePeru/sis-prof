@@ -10,6 +10,7 @@ use App\Models\TermTemplate;
 use App\Support\AppShell;
 use App\Support\CompanyContext;
 use App\Support\LatamCurrencies;
+use App\Support\TenantDatabaseManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -168,8 +169,18 @@ class ProformaController extends Controller
 
     public function destroy(Request $request, Proforma $proforma): RedirectResponse|JsonResponse
     {
+        $company = app(CompanyContext::class)->active();
+        if ($company) {
+            TenantDatabaseManager::connect($company);
+        }
+
         try {
             DB::connection('tenant')->transaction(function () use ($proforma) {
+                try {
+                    $proforma->documents()->detach();
+                } catch (\Throwable $e) {
+                    // Ignora si la tabla pivote no existe o ya estaba desvinculada
+                }
                 $proforma->items()->delete();
                 $proforma->photos()->delete();
                 $proforma->delete();
@@ -188,6 +199,8 @@ class ProformaController extends Controller
 
             return back()->withErrors(['proforma' => 'No se pudo eliminar la proforma: '.$e->getMessage()]);
         }
+
+        session()->flash('status', 'Proforma eliminada correctamente.');
 
         if ($request->expectsJson() || $request->header('X-App-Partial') === '1') {
             return $this->index($request);
