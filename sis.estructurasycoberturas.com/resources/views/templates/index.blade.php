@@ -134,13 +134,10 @@
                             </form>
                         @endif
                     @else
-                        <form action="{{ route('templates.checkout', $template['slug']) }}" method="POST" style="margin-left: auto;">
-                            @csrf
-                            <button type="submit" class="tpl-btn-buy" title="Desbloquear para tus proformas por $5.00 USD">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                Desbloquear ($5.00)
-                            </button>
-                        </form>
+                        <a href="{{ route('templates.payment', $template['slug']) }}" class="tpl-btn-buy" data-ajax-link data-nav="templates" title="Pagar y desbloquear por $5.00 USD" style="margin-left: auto;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            Desbloquear ($5.00)
+                        </a>
                     @endif
                 </div>
             </div>

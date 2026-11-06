@@ -81,13 +81,10 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
-        if ($this->isSuperAdmin()) {
-            return true;
-        }
-
         return $this->templatePurchases()
             ->where('template_slug', $slug)
             ->where('status', 'completed')
+            ->where('source', '!=', 'courtesy')
             ->exists();
     }
 

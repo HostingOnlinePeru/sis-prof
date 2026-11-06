@@ -131,6 +131,37 @@ class TemplateStoreController extends Controller
         ])->render());
     }
 
+    public function payment(Request $request, string $slug): View|JsonResponse|RedirectResponse
+    {
+        $template = TemplateCatalog::find($slug);
+        abort_unless($template, 404, 'Plantilla no encontrada');
+
+        $user = $request->user();
+
+        if ($template['is_free'] || $user->hasUnlockedTemplate($slug)) {
+            return redirect()->route('templates.index')
+                ->with('status', 'Esta plantilla ya se encuentra desbloqueada en tu cuenta.');
+        }
+
+        $company = app(CompanyContext::class)->active();
+        $priceUsd = (float) ($template['price_usd'] ?? 5.00);
+        $approxPen = round($priceUsd * 3.80, 2);
+
+        return AppShell::render($request, [
+            'activePage' => 'templates',
+            'subtitle' => 'Finaliza el pago para desbloquear el modelo y usarlo en tus proformas.',
+            'title' => 'Pago Seguro - '.$template['name'],
+        ], 'templates.payment', [
+            'user' => $user,
+            'company' => $company,
+            'template' => $template,
+            'priceUsd' => $priceUsd,
+            'approxPen' => $approxPen,
+            'stripeReady' => StripeGateway::isConfigured(),
+            'stripeKey' => StripeGateway::publicKey(),
+        ]);
+    }
+
     public function checkout(Request $request, string $slug): RedirectResponse
     {
         $template = TemplateCatalog::find($slug);
@@ -141,6 +172,12 @@ class TemplateStoreController extends Controller
         if ($template['is_free'] || $user->hasUnlockedTemplate($slug)) {
             return redirect()->route('templates.index')
                 ->with('status', 'Esta plantilla ya se encuentra desbloqueada en tu cuenta.');
+        }
+
+        if (! StripeGateway::isConfigured()) {
+            return redirect()->route('templates.payment', $slug)->withErrors([
+                'payment' => 'La pasarela Stripe aún no está conectada. El Super Administrador debe ingresar las llaves de Stripe en el panel (Membresías -> Configurar Stripe) para procesar el pago real de $5.00 USD.',
+            ]);
         }
 
         $purchase = TemplatePurchase::query()->firstOrCreate(
@@ -155,18 +192,6 @@ class TemplateStoreController extends Controller
             ]
         );
 
-        if (! StripeGateway::isConfigured()) {
-            // Direct unlock in testing or if Stripe is not yet configured
-            $purchase->update([
-                'status' => 'completed',
-                'source' => 'courtesy',
-                'notes' => 'Desbloqueo de activación directa',
-            ]);
-
-            return redirect()->route('templates.index')
-                ->with('status', "¡Plantilla \"{$template['name']}\" desbloqueada exitosamente para tus proformas!");
-        }
-
         try {
             $session = StripeGateway::createTemplateCheckoutSession($user, $template, $purchase);
             $purchase->update(['stripe_session_id' => $session['id']]);
@@ -175,7 +200,7 @@ class TemplateStoreController extends Controller
         } catch (Throwable $e) {
             Log::error('Template Stripe checkout error', ['error' => $e->getMessage()]);
 
-            return back()->withErrors(['template' => 'No se pudo iniciar el pago: '.$e->getMessage()]);
+            return redirect()->route('templates.payment', $slug)->withErrors(['payment' => 'No se pudo iniciar el pago: '.$e->getMessage()]);
         }
     }
 

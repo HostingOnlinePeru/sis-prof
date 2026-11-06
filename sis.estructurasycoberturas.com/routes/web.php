@@ -81,6 +81,7 @@ Route::middleware(['auth', EnsureUserIsActive::class, EnsureUserHasCompany::clas
 
     Route::get('/admin/plantillas', [TemplateStoreController::class, 'index'])->name('templates.index');
     Route::get('/admin/plantillas/{slug}/vista-previa', [TemplateStoreController::class, 'preview'])->name('templates.preview');
+    Route::get('/admin/plantillas/{slug}/pago', [TemplateStoreController::class, 'payment'])->name('templates.payment');
     Route::post('/admin/plantillas/{slug}/comprar', [TemplateStoreController::class, 'checkout'])->name('templates.checkout');
     Route::get('/admin/plantillas/pago-exitoso', [TemplateStoreController::class, 'success'])->name('templates.success');
     Route::post('/admin/plantillas/{slug}/predeterminada', [TemplateStoreController::class, 'setDefault'])->name('templates.set-default');
