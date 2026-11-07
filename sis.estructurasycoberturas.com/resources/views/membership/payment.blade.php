@@ -13,7 +13,8 @@
 .mb-pay-methods {display: flex; gap: 12px; margin-bottom: 22px;}
 .mb-pay-method-tab {flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); border: 1.5px solid #6366f1; color: #f8fafc; font-size: 13px; font-weight: 600;}
 .mb-pay-brands {display: flex; align-items: center; gap: 6px;}
-.mb-brand-pill {font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); color: #f8fafc; letter-spacing: 0.5px;}
+.mb-brand-logo {display: inline-block; height: 24px; width: 38px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.12); vertical-align: middle; flex-shrink: 0; transition: transform 0.15s ease;}
+.mb-brand-logo:hover {transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);}
 .mb-field-group {margin-bottom: 18px;}
 .mb-field-label {display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px;}
 .mb-field-input {width: 100%; box-sizing: border-box; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; font-size: 14px; color: #f8fafc; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease;}
@@ -97,9 +98,31 @@
                         <span>Tarjeta de Crédito / Débito (Stripe)</span>
                     </div>
                     <div class="mb-pay-brands">
-                        <span class="mb-brand-pill" style="color:#60a5fa;">VISA</span>
-                        <span class="mb-brand-pill" style="color:#f87171;">MC</span>
-                        <span class="mb-brand-pill" style="color:#38bdf8;">AMEX</span>
+                        {{-- VISA --}}
+                        <svg class="mb-brand-logo" width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Visa" role="img">
+                            <rect width="38" height="24" rx="4" fill="#FFFFFF"/>
+                            <path d="M15.42 16.5H13.25L14.61 8.5H16.78L15.42 16.5ZM22.42 8.7C21.99 8.54 21.31 8.37 20.44 8.37C18.1 8.37 16.44 9.59 16.42 11.33C16.4 12.62 17.58 13.34 18.48 13.77C19.4 14.21 19.71 14.49 19.71 14.88C19.71 15.48 18.98 15.75 18.28 15.75C17.35 15.75 16.82 15.61 15.99 15.25L15.65 15.09L15.27 17.36C15.9 17.64 17.06 17.89 18.26 17.9C20.76 17.9 22.4 16.69 22.43 14.83C22.44 13.74 21.75 12.91 20.31 12.23C19.43 11.8 18.9 11.51 18.9 11.06C18.91 10.65 19.37 10.22 20.35 10.22C21.13 10.21 21.68 10.37 22.12 10.56L22.33 10.65L22.71 8.44C22.62 8.41 22.42 8.7 22.42 8.7ZM27.06 8.5H25.39C24.87 8.5 24.48 8.65 24.26 9.18L20.7 17.5H22.97C22.97 17.5 23.34 16.47 23.43 16.22C23.68 16.22 25.89 16.22 26.23 16.22C26.31 16.55 26.51 17.48 26.51 17.48H28.52L27.06 8.5ZM24.02 14.64C24.2 14.15 24.9 12.3 24.9 12.3C24.89 12.31 25.09 11.8 25.2 11.49L25.36 12.25C25.36 12.25 25.82 14.42 25.87 14.64H24.02ZM12.08 8.5L9.97 14.62L9.74 13.49C9.37 12.24 8.2 10.87 6.92 10.21L8.9 17.5H11.19L14.6 8.5H12.08Z" fill="#1A1F71"/>
+                            <path d="M8.07 8.5H4.61L4.57 8.66C7.25 9.33 9.54 11.03 10.27 12.95L9.49 8.97C9.35 8.47 8.98 8.5 8.07 8.5Z" fill="#F7B600"/>
+                        </svg>
+                        {{-- MASTERCARD --}}
+                        <svg class="mb-brand-logo" width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Mastercard" role="img">
+                            <rect width="38" height="24" rx="4" fill="#FFFFFF"/>
+                            <circle cx="14.5" cy="12" r="6.5" fill="#EB001B"/>
+                            <circle cx="23.5" cy="12" r="6.5" fill="#F79E1B"/>
+                            <path d="M 19 7.31 A 6.5 6.5 0 0 1 19 16.69 A 6.5 6.5 0 0 1 19 7.31 Z" fill="#FF5F00"/>
+                        </svg>
+                        {{-- AMERICAN EXPRESS --}}
+                        <svg class="mb-brand-logo" width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="American Express" role="img">
+                            <rect width="38" height="24" rx="4" fill="#006FCF"/>
+                            <path d="M6 15.5L8.5 8.5H11L13.5 15.5H11.3L10.8 14H8.7L8.2 15.5H6ZM9.1 12.3H10.4L9.8 10.3L9.1 12.3ZM14.2 15.5V8.5H16.8L18.4 13L20 8.5H22.6V15.5H20.7V11.3L19.2 15.1H17.6L16.1 11.3V15.5H14.2ZM23.8 15.5V8.5H30V10.4H25.8V10.9H29.4V12.9H25.8V13.6H30V15.5H23.8Z" fill="#FFFFFF"/>
+                        </svg>
+                        {{-- DISCOVER --}}
+                        <svg class="mb-brand-logo" width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Discover" role="img">
+                            <rect width="38" height="24" rx="4" fill="#FFFFFF"/>
+                            <path d="M6 14.5V9.5H8.8C10.5 9.5 11.6 10.5 11.6 12C11.6 13.5 10.5 14.5 8.8 14.5H6ZM7.6 13.2H8.7C9.7 13.2 10.2 12.7 10.2 12C10.2 11.3 9.7 10.8 8.7 10.8H7.6V13.2ZM12.7 14.5V9.5H14.2V14.5H12.7ZM19 14.7C17.5 14.7 16.3 13.5 16.3 12C16.3 10.5 17.5 9.3 19 9.3C20.5 9.3 21.7 10.5 21.7 12C21.7 13.5 20.5 14.7 19 14.7Z" fill="#231F20"/>
+                            <circle cx="19" cy="12" r="2.7" fill="#F47216"/>
+                            <path d="M22.8 14.5L24.8 9.5H26.4L28.4 14.5H26.8L26.4 13.4H24.8L24.4 14.5H22.8ZM25.1 12.2H26.1L25.6 10.8L25.1 12.2ZM28.5 14.5V9.5H32V10.7H29.9V11.4H31.7V12.6H29.9V13.3H32.1V14.5H28.5Z" fill="#231F20"/>
+                        </svg>
                     </div>
                 </div>
             </div>
