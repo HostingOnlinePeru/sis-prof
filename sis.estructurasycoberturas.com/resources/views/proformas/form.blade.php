@@ -157,30 +157,31 @@
                 <label for="template">Modelo PDF</label>
                 <select id="template" name="template" required>
                     @if (isset($templates) && $templates->isNotEmpty())
-                        <optgroup label="Modelos Gratuitos (Incluidos)">
-                            @foreach ($templates->filter(fn($t) => $t['is_free']) as $tpl)
+                        @php
+                            $freeTpls = $templates->filter(fn($t) => ! empty($t['is_free']));
+                            $unlockedPremiumTpls = $templates->filter(fn($t) => empty($t['is_free']) && (! empty($t['is_unlocked']) || ($proforma->exists && $proforma->template === $t['slug'])));
+                        @endphp
+                        @if ($unlockedPremiumTpls->isNotEmpty())
+                            <optgroup label="Modelos Gratuitos (Incluidos)">
+                                @foreach ($freeTpls as $tpl)
+                                    <option value="{{ $tpl['slug'] }}" @selected(old('template', $proforma->template) === $tpl['slug'])>
+                                        {{ $tpl['name'] }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Modelos Premium">
+                                @foreach ($unlockedPremiumTpls as $tpl)
+                                    <option value="{{ $tpl['slug'] }}" @selected(old('template', $proforma->template) === $tpl['slug'])>
+                                        ⭐ {{ $tpl['name'] }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @else
+                            @foreach ($freeTpls as $tpl)
                                 <option value="{{ $tpl['slug'] }}" @selected(old('template', $proforma->template) === $tpl['slug'])>
                                     {{ $tpl['name'] }}
                                 </option>
                             @endforeach
-                        </optgroup>
-                        @php
-                            $premiumTpls = $templates->filter(fn($t) => ! $t['is_free']);
-                        @endphp
-                        @if ($premiumTpls->isNotEmpty())
-                            <optgroup label="Modelos Premium">
-                                @foreach ($premiumTpls as $tpl)
-                                    @if ($tpl['is_unlocked'])
-                                        <option value="{{ $tpl['slug'] }}" @selected(old('template', $proforma->template) === $tpl['slug'])>
-                                            ⭐ {{ $tpl['name'] }}
-                                        </option>
-                                    @else
-                                        <option value="{{ $tpl['slug'] }}" disabled>
-                                            🔒 {{ $tpl['name'] }} ($5.00 USD - Bloqueada)
-                                        </option>
-                                    @endif
-                                @endforeach
-                            </optgroup>
                         @endif
                     @else
                         <option value="commercial" @selected(old('template', $proforma->template) === 'commercial')>Modelo 1: Comercial Clásico</option>

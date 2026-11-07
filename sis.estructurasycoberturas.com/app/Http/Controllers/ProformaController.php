@@ -135,7 +135,7 @@ class ProformaController extends Controller
 
     public function update(Request $request, Proforma $proforma): RedirectResponse
     {
-        $validated = $this->validatedData($request);
+        $validated = $this->validatedData($request, $proforma);
 
         try {
             DB::connection('tenant')->transaction(function () use ($proforma, $validated, $request) {
@@ -288,7 +288,7 @@ class ProformaController extends Controller
         ]);
     }
 
-    private function validatedData(Request $request): array
+    private function validatedData(Request $request, ?Proforma $proforma = null): array
     {
         $company = app(CompanyContext::class)->active();
         $canUseMultiCurrency = (bool) $request->user()?->canUseMultiCurrency();
@@ -296,7 +296,10 @@ class ProformaController extends Controller
         $allowedCodes = array_keys($enabledCurrencies);
         $primaryCurrency = $company?->default_currency ?: 'PEN';
 
-        $allowedTemplates = \App\Support\TemplateCatalog::all()->keys()->all();
+        $allowedTemplates = \App\Support\TemplateCatalog::unlockedForUser($request->user())->keys()->all();
+        if ($proforma && $proforma->template && ! in_array($proforma->template, $allowedTemplates, true)) {
+            $allowedTemplates[] = $proforma->template;
+        }
 
         $data = $request->validate([
             'client_id' => ['required', Rule::exists(Client::class, 'id')],
