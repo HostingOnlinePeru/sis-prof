@@ -76,6 +76,7 @@ Route::post('/stripe/webhook', [MembershipController::class, 'webhook'])->name('
 // Main Business Application Routes (Protected by auth and company check, Tenants only)
 Route::middleware(['auth', EnsureUserIsActive::class, EnsureUserHasCompany::class, EnsureActiveMembership::class])->group(function () {
     Route::get('/admin/membresia', [MembershipController::class, 'index'])->name('membership.index');
+    Route::get('/admin/membresia/{plan:slug}/pago', [MembershipController::class, 'payment'])->name('membership.payment');
     Route::post('/admin/membresia/{plan:slug}/pagar', [MembershipController::class, 'checkout'])->name('membership.checkout');
     Route::get('/admin/membresia/pago-exitoso', [MembershipController::class, 'success'])->name('membership.success');
 

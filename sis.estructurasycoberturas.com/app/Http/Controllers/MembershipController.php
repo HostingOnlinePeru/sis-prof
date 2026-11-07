@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MembershipPlan;
 use App\Models\Subscription;
 use App\Support\AppShell;
+use App\Support\CompanyContext;
 use App\Support\StripeGateway;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,12 +34,37 @@ class MembershipController extends Controller
         ]);
     }
 
+    public function payment(Request $request, MembershipPlan $plan): View|JsonResponse|RedirectResponse
+    {
+        abort_unless($plan->is_active, 404);
+
+        $user = $request->user();
+        $company = app(CompanyContext::class)->active();
+        $approxPen = round((float) $plan->price_usd * 3.80, 2);
+
+        return AppShell::render($request, [
+            'activePage' => 'membership',
+            'subtitle' => 'Finaliza el pago para activar o renovar tu membresía en SISPROF.',
+            'title' => 'Módulo de Pago Seguro · '.$plan->fullName(),
+        ], 'membership.payment', [
+            'user' => $user,
+            'company' => $company,
+            'plan' => $plan,
+            'priceUsd' => (float) $plan->price_usd,
+            'approxPen' => $approxPen,
+            'stripeReady' => StripeGateway::isConfigured(),
+            'stripeKey' => StripeGateway::publicKey(),
+        ]);
+    }
+
     public function checkout(Request $request, MembershipPlan $plan): RedirectResponse
     {
         abort_unless($plan->is_active, 404);
 
         if (! StripeGateway::isConfigured()) {
-            return back()->withErrors(['membership' => 'Los pagos con Stripe aún no están configurados. Inténtalo más tarde.']);
+            return redirect()->route('membership.payment', $plan)->withErrors([
+                'membership' => 'La pasarela Stripe aún no está conectada. El Super Administrador debe ingresar las llaves de Stripe en el panel (Membresías -> Configurar Stripe) para procesar el pago real de $'.number_format($plan->price_usd, 2).' USD.',
+            ]);
         }
 
         $user = $request->user();
@@ -59,7 +85,7 @@ class MembershipController extends Controller
             $subscription->update(['status' => 'failed', 'notes' => mb_substr($e->getMessage(), 0, 250)]);
             Log::error('Stripe checkout error', ['error' => $e->getMessage()]);
 
-            return back()->withErrors(['membership' => 'No se pudo iniciar el pago: '.$e->getMessage()]);
+            return redirect()->route('membership.payment', $plan)->withErrors(['membership' => 'No se pudo iniciar el pago: '.$e->getMessage()]);
         }
 
         $subscription->update(['stripe_session_id' => $session['id']]);

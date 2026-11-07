@@ -64,7 +64,7 @@
 .mb-plan.is-premium .mb-features li::before {background: rgba(139, 92, 246, .2); color: #c4b5fd;}
 .mb-features li.is-disabled {color: rgba(154, 168, 183, .5);}
 .mb-features li.is-disabled::before {content: '✕'; background: rgba(100, 116, 139, .15); color: #64748b;}
-.mb-pay {margin-top: auto; width: 100%; min-height: 50px; border: 0; border-radius: 14px; cursor: pointer; font: inherit; font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #635bff 0%, #7a73ff 100%); box-shadow: 0 12px 26px -8px rgba(99, 91, 255, .6); display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;}
+.mb-pay {margin-top: auto; width: 100%; min-height: 50px; border: 0; border-radius: 14px; cursor: pointer; font: inherit; font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #635bff 0%, #7a73ff 100%); box-shadow: 0 12px 26px -8px rgba(99, 91, 255, .6); display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease; text-decoration: none; box-sizing: border-box; text-align: center;}
 .mb-plan.is-featured:not(.is-premium):not(.is-standard) .mb-pay {background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #111827; box-shadow: 0 12px 28px -8px rgba(245, 158, 11, .6);}
 .mb-plan.is-standard.is-featured .mb-pay {background: linear-gradient(135deg, #0ea5e9, #10b981); box-shadow: 0 12px 28px -8px rgba(14, 165, 233, .65);}
 .mb-plan.is-premium.is-featured .mb-pay {background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 12px 28px -8px rgba(139, 92, 246, .7);}
@@ -144,9 +144,6 @@
     @if ($cancelled)
         <div class="mb-alert mb-alert-warn">El pago fue cancelado. Puedes intentarlo nuevamente cuando quieras.</div>
     @endif
-    @unless ($stripeReady)
-        <div class="mb-alert mb-alert-warn">Los pagos en línea con Stripe se están configurando. Muy pronto podrás pagar tu plan desde aquí.</div>
-    @endunless
 
     <section class="mb-status {{ $active ? '' : 'is-expired' }}" id="membership-status">
         <div>
@@ -247,12 +244,9 @@
                     <li class="is-disabled">Emisión de Recibos (Hasta 50/mes)</li>
                     <li class="is-disabled">Generación de Guías de Remisión (Hasta 50/mes)</li>
                 </ul>
-                <form method="post" action="{{ route('membership.checkout', $plan) }}">
-                    @csrf
-                    <button class="mb-pay" type="submit" id="pay-{{ $plan->slug }}" @disabled(! $stripeReady)>
-                        {!! $cardIcon !!} Elegir Básico {{ $plan->name }}
-                    </button>
-                </form>
+                <a href="{{ route('membership.payment', $plan) }}" class="mb-pay" id="pay-{{ $plan->slug }}" data-ajax-link data-nav="membership">
+                    {!! $cardIcon !!} Elegir Básico {{ $plan->name }}
+                </a>
                 <div class="mb-secure">{!! $lockIcon !!} Pago seguro con tarjeta vía Stripe</div>
             </article>
         @endforeach
@@ -291,12 +285,9 @@
                     <li class="is-disabled">Emisión de Recibos (Hasta 50/mes)</li>
                     <li class="is-disabled">Generación de Guías de Remisión (Hasta 50/mes)</li>
                 </ul>
-                <form method="post" action="{{ route('membership.checkout', $plan) }}">
-                    @csrf
-                    <button class="mb-pay" type="submit" id="pay-{{ $plan->slug }}" @disabled(! $stripeReady)>
-                        {!! $cardIcon !!} Elegir Stándar {{ $plan->name }}
-                    </button>
-                </form>
+                <a href="{{ route('membership.payment', $plan) }}" class="mb-pay" id="pay-{{ $plan->slug }}" data-ajax-link data-nav="membership">
+                    {!! $cardIcon !!} Elegir Stándar {{ $plan->name }}
+                </a>
                 <div class="mb-secure">{!! $lockIcon !!} Pago seguro con tarjeta vía Stripe</div>
             </article>
         @endforeach
@@ -333,12 +324,9 @@
                     <li><span><strong>Generación de Guías de Remisión</strong> (Hasta 50/mes)</span></li>
                     <li>Clientes ilimitados, correo y exportación PDF</li>
                 </ul>
-                <form method="post" action="{{ route('membership.checkout', $plan) }}">
-                    @csrf
-                    <button class="mb-pay" type="submit" id="pay-{{ $plan->slug }}" @disabled(! $stripeReady)>
-                        {!! $cardIcon !!} Elegir Corporativo {{ $plan->name }}
-                    </button>
-                </form>
+                <a href="{{ route('membership.payment', $plan) }}" class="mb-pay" id="pay-{{ $plan->slug }}" data-ajax-link data-nav="membership">
+                    {!! $cardIcon !!} Elegir Corporativo {{ $plan->name }}
+                </a>
                 <div class="mb-secure">{!! $lockIcon !!} Pago seguro con tarjeta vía Stripe</div>
             </article>
         @endforeach
